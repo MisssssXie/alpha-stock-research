@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聯華電子 (2303.TW) 即時評價報告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+
+        /* Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            max-width: 100%;
+        }
+
+        /* Custom Scrollbar for tables */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            margin-top: -8px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+        
+        /* Blinking dot for live status */
+        .blink-dot {
+            height: 8px;
+            width: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            display: inline-block;
+            animation: blinker 1.5s linear infinite;
+        }
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+    </style>
+    <!-- Chosen Palette: "Institutional Blue" - Trustworthy Blue (#2563eb) as primary.
+         Status colors adjusted for higher price sensitivity.
+    -->
+
+    <!-- Application Structure Plan:
+         1. Header: Live Price 55.1 highlighted.
+         2. Hero Section: Updated thesis reflecting HIGHER valuation risk due to price increase.
+         3. Interactive Model: Same logic, but initial calculation will show wider gap to fair value.
+         4. Charts: Price line updated to 55.1.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50">
+
+    <!-- Navigation / Header -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-slate-800 tracking-tight">
+                        <i class="fas fa-chart-line text-blue-600 mr-2"></i>聯電 (2303.TW)
+                    </span>
+                    <span class="ml-4 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hidden sm:inline-flex items-center">
+                        <span class="blink-dot mr-2"></span> 即時行情更新
+                    </span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <div class="text-xs text-slate-500">最新收盤價</div>
+                        <div class="font-mono font-bold text-red-600 text-lg">55.10 <span class="text-xs font-normal text-slate-400">TWD</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- 1. Recommendation Hero (Updated for 55.1 Price) -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Verdict -->
+            <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-bl-full -mr-8 -mt-8 z-0"></div>
+                <div class="relative z-10">
+                    <h2 class="text-xl font-bold text-slate-800 mb-2">評價修正：風險溢酬收斂</h2>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        最新收盤 <strong>55.10 元</strong> 已明確突破 +1 標準差 (樂觀區間下緣)。
+                        雖然基本面有特殊製程支撐，但股價已先行反應復甦預期。目前位階對應 2026 預估 EPS 約為 <strong>16.2 倍本益比</strong>，屬於歷史昂貴區。建議<strong>暫停追價</strong>，等待回測月線支撐。
+                    </p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                            <div class="text-xs text-slate-500 mb-1">投資評級</div>
+                            <div class="font-bold text-slate-500">中性偏空 / 觀望</div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                            <div class="text-xs text-slate-500 mb-1">合理目標價</div>
+                            <div class="font-bold text-blue-600">44.2 元</div>
+                            <div class="text-[10px] text-slate-400">13x PE (均值)</div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                            <div class="text-xs text-slate-500 mb-1">乖離率 (Upside)</div>
+                            <div class="font-bold text-red-600">-19.7%</div>
+                            <div class="text-[10px] text-slate-400">距合理價</div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                            <div class="text-xs text-slate-500 mb-1">防禦地板</div>
+                            <div class="font-bold text-green-600">35.7 元</div>
+                            <div class="text-[10px] text-slate-400">10.5x PE (保守)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Metric: Price Sensitivity -->
+            <div class="bg-slate-800 rounded-2xl p-6 shadow-sm text-white flex flex-col justify-between">
+                <div>
+                    <h3 class="text-slate-300 text-sm font-medium mb-1"><i class="fas fa-exclamation-triangle mr-2 text-yellow-400"></i>估值敏感度警示</h3>
+                    <div class="text-3xl font-bold text-white mb-2">16.2x <span class="text-sm font-normal text-slate-400">PE</span></div>
+                    <p class="text-xs text-slate-400 leading-normal">
+                        以 55.1 元計算，本益比已高於過去 3 年平均 (13x)。
+                        <br><br>
+                        <span class="text-yellow-400">策略：</span> 此價位容錯率低。若月營收未達 200 億水準，股價面臨修正壓力較大。
+                    </p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
+                    <span class="text-xs text-slate-400">資料基準日</span>
+                    <span class="font-mono">本日收盤</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Interactive Financial Model (2026 Forecast) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">2026 極限 EPS 預測模型</h3>
+                    <p class="text-sm text-slate-500 mt-1">請調整營收/毛利，觀察 55.1 元股價是否合理</p>
+                </div>
+                <button onclick="resetModel()" class="mt-2 sm:mt-0 text-xs font-medium text-blue-600 hover:text-blue-800 bg-white px-3 py-1.5 rounded-lg border border-blue-200 shadow-sm transition">
+                    <i class="fas fa-undo mr-1"></i>重置為基準情境
+                </button>
+            </div>
+            
+            <div class="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Controls -->
+                <div class="lg:col-span-5 space-y-8">
+                    <!-- Revenue Slider -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-700">預估年度營收 (億元)</label>
+                            <span id="rev-val" class="text-blue-600 font-mono font-bold">2428</span>
+                        </div>
+                        <input type="range" id="revenue" min="2300" max="2600" value="2428" step="10" class="w-full">
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                            <span>保守 (2350)</span>
+                            <span>基準 (2428)</span>
+                            <span>樂觀 (2550)</span>
+                        </div>
+                    </div>
+
+                    <!-- Margin Slider -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-700">預估淨利率 (%)</label>
+                            <span id="margin-val" class="text-blue-600 font-mono font-bold">17.6%</span>
+                        </div>
+                        <input type="range" id="margin" min="15.0" max="20.0" value="17.6" step="0.1" class="w-full">
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                            <span>折舊壓力 (16.0%)</span>
+                            <span>基準 (17.6%)</span>
+                            <span>產品優化 (19.0%)</span>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Results Panel -->
+                    <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-sm text-slate-800 font-medium">預估 2026 EPS</span>
+                            <span id="eps-result" class="text-3xl font-bold text-slate-700">3.40</span>
+                        </div>
+                        <div class="space-y-3">
+                            <!-- Scenario Analysis List -->
+                             <div class="flex justify-between items-center text-sm p-2 rounded bg-white border border-slate-100">
+                                <span class="text-slate-600">合理估值 (13x)</span>
+                                <span id="target-fair" class="font-bold text-blue-600">44.2</span>
+                            </div>
+                            
+                            <!-- Current Price Comparison Box -->
+                            <div class="pt-3 border-t border-slate-200 mt-2">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm text-slate-600">目前股價</span>
+                                    <span class="font-mono font-bold text-slate-900">55.10</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-slate-500">評價狀態</span>
+                                    <span id="price-status" class="font-bold text-sm text-red-600 bg-red-50 px-2 py-1 rounded">過熱 (昂貴)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization -->
+                <div class="lg:col-span-7 flex flex-col">
+                    <h4 class="text-sm font-bold text-slate-600 mb-4 text-center">本益比河流圖矩陣 (PE Matrix)</h4>
+                    <div class="chart-container flex-grow bg-white border border-slate-100 rounded-xl p-2">
+                        <canvas id="valuationChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-slate-400 mt-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-green-400 mr-1"></span>便宜
+                        <span class="inline-block w-2 h-2 rounded-full bg-gray-300 mx-1"></span>合理
+                        <span class="inline-block w-2 h-2 rounded-full bg-red-400 mr-1"></span>昂貴
+                        <span class="inline-block w-2 h-2 rounded-full bg-slate-800 ml-2 mr-1"></span>目前股價(55.1)
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Revenue Checkpoint -->
+        <section class="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
+            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                <i class="fas fa-clipboard-check text-blue-600 mr-2"></i>營收達標檢查表 (Revenue Monitor)
+            </h3>
+            <p class="text-sm text-slate-500 mb-4">
+                股價若要站穩 55 元，每月平均營收需達到 <strong class="text-slate-800">205 億元</strong> 以上 (支撐 EPS 3.6+)。
+            </p>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 text-slate-600 font-medium">
+                        <tr>
+                            <th class="px-4 py-3 rounded-tl-lg">月份</th>
+                            <th class="px-4 py-3">支撐 55元 目標</th>
+                            <th class="px-4 py-3">實際</th>
+                            <th class="px-4 py-3 rounded-tr-lg">狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr>
+                            <td class="px-4 py-3 font-medium">2025-12</td>
+                            <td class="px-4 py-3">205.0</td>
+                            <td class="px-4 py-3">192.8</td>
+                            <td class="px-4 py-3"><span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">落後 (-6%)</span></td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-medium text-slate-400">2026-01</td>
+                            <td class="px-4 py-3 text-slate-400">200.0</td>
+                            <td class="px-4 py-3 text-slate-400">-</td>
+                            <td class="px-4 py-3"><span class="px-2 py-1 bg-slate-100 text-slate-500 rounded-full text-xs">待觀察</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-slate-400 text-xs py-8 border-t border-slate-200">
+            <p>© 2026 AI Investment Analysis System. 股價數據更新至本日收盤。</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- LIVE DATA UPDATE ---
+        const SHARES = 125.56; // Billion Shares
+        const CURRENT_PRICE = 55.10; // Updated per user
+        
+        // Base Scenario
+        const BASE_REV = 2428;
+        const BASE_MARGIN = 17.6;
+
+        let chartInstance = null;
+
+        // --- Model Logic ---
+        function updateModel() {
+            const rev = parseFloat(document.getElementById('revenue').value);
+            const margin = parseFloat(document.getElementById('margin').value);
+
+            document.getElementById('rev-val').innerText = rev;
+            document.getElementById('margin-val').innerText = margin.toFixed(1) + '%';
+
+            // EPS Calculation
+            const eps = (rev * (margin / 100)) / 125.56;
+            const epsFixed = eps.toFixed(2);
+
+            document.getElementById('eps-result').innerText = epsFixed;
+            
+            const pFair = (eps * 13.0).toFixed(1);
+            
+            document.getElementById('target-fair').innerText = pFair;
+
+            // Status Check Logic based on 55.1
+            const statusEl = document.getElementById('price-status');
+            const optimisticPrice = eps * 15.5;
+            const fairPrice = eps * 13.0;
+
+            if (CURRENT_PRICE > optimisticPrice) {
+                statusEl.innerText = `過熱 (高於 ${optimisticPrice.toFixed(1)})`;
+                statusEl.className = "font-bold text-sm text-red-600 bg-red-50 px-2 py-1 rounded";
+            } else if (CURRENT_PRICE > fairPrice) {
+                statusEl.innerText = "偏高 (合理~樂觀)";
+                statusEl.className = "font-bold text-sm text-yellow-600 bg-yellow-50 px-2 py-1 rounded";
+            } else {
+                statusEl.innerText = "低估 (具安全邊際)";
+                statusEl.className = "font-bold text-sm text-green-600 bg-green-50 px-2 py-1 rounded";
+            }
+
+            updateChart(eps);
+        }
+
+        function resetModel() {
+            document.getElementById('revenue').value = BASE_REV;
+            document.getElementById('margin').value = BASE_MARGIN;
+            updateModel();
+        }
+
+        // --- Chart Logic ---
+        function initChart() {
+            const ctx = document.getElementById('valuationChart').getContext('2d');
+            
+            // Labels: Past 4 years + Current Model
+            const labels = ['2022', '2023', '2024', '2025(E)', '2026(Model)'];
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '樂觀 (15.5x)',
+                            data: [65, 55, 58, 51, 0], 
+                            borderColor: 'rgba(239, 68, 68, 0.5)', 
+                            backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                            fill: '+1',
+                            tension: 0.4,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '合理 (13.0x)',
+                            data: [55, 46, 48, 43, 0], 
+                            borderColor: 'rgba(100, 116, 139, 0.5)', 
+                            backgroundColor: 'rgba(100, 116, 139, 0.05)',
+                            fill: '+1',
+                            tension: 0.4,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '保守 (10.5x)',
+                            data: [45, 37, 39, 35, 0], 
+                            borderColor: 'rgba(34, 197, 94, 0.5)', 
+                            backgroundColor: 'rgba(34, 197, 94, 0.05)',
+                            fill: 'start',
+                            tension: 0.4,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '目前股價 (55.1)',
+                            data: [58, 48, 52, 53, CURRENT_PRICE], 
+                            borderColor: '#1e293b', 
+                            borderWidth: 3,
+                            borderDash: [2, 2],
+                            fill: false,
+                            tension: 0.1,
+                            pointStyle: 'circle',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: '#ef4444', // Red dot for current price
+                            pointBorderColor: '#fff'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 10, font: { size: 10 } }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 30,
+                            max: 75, // Increased max to accommodate 55.1 visually comfortably
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        function updateChart(currentEPS) {
+            if (!chartInstance) return;
+
+            const pOptimistic = currentEPS * 15.5;
+            const pFair = currentEPS * 13.0;
+            const pConservative = currentEPS * 10.5;
+
+            const lastIdx = 4;
+            chartInstance.data.datasets[0].data[lastIdx] = pOptimistic;
+            chartInstance.data.datasets[1].data[lastIdx] = pFair;
+            chartInstance.data.datasets[2].data[lastIdx] = pConservative;
+            chartInstance.data.datasets[3].data[lastIdx] = CURRENT_PRICE;
+
+            chartInstance.update();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            document.getElementById('revenue').addEventListener('input', updateModel);
+            document.getElementById('margin').addEventListener('input', updateModel);
+            updateModel();
+        });
+    </script>
+</body>
+</html>
