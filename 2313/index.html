@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>華通 (2313) 2026 投資價值分析儀表板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f3f4f6; /* Warm neutral background */
+            color: #1f2937;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%; /* Responsive within grid */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; /* Base height */
+            max-height: 400px;
+        }
+        
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+            border-radius: 4px;
+        }
+
+        .slider-thumb:hover {
+            opacity: 1;
+        }
+
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4f46e5;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .slider-thumb::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #4f46e5;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .card-hover {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+    <!-- Chosen Palette: Warm Professional - Background #f3f4f6, Cards #ffffff, Primary #4f46e5 (Indigo), Success #10b981 (Emerald), Text #1f2937 (Gray-900) -->
+    <!-- Application Structure Plan: 
+         1. Header: Quick summary of the Bullish rating and current context.
+         2. Interactive Valuation Matrix (Core): A dynamic simulator allowing users to play with EPS and PE ratios to understand the price target logic ($114-$152).
+         3. Growth Drivers (Context): Visualizing the Thailand plant expansion and Capex hike (The "Why" behind the EPS).
+         4. Operational Health (Checklist): A gauge/progress view of Revenue and Margin to track if the company is meeting the conditions for the high valuation.
+         5. Synthesis: Textual summary of the investment thesis.
+         Structure chosen to move from "What is it worth?" (Outcome) to "Why is it worth that?" (Drivers) to "Is it on track?" (Verification).
+    -->
+    <!-- Visualization & Content Choices:
+         1. Price Target Simulator: Bar Chart (Chart.js) + Sliders. Goal: Inform/Change. Justification: Users need to see how sensitivity in EPS/PE affects the target price.
+         2. Capacity Expansion: Doughnut Charts. Goal: Compare. Justification: Visualizing the doubling of capacity (400k->800k) is impactful.
+         3. Revenue Thermometer: Horizontal Bar. Goal: Inform/Verify. Justification: Shows how current performance (Dec '25) compares to the 2026 required run rate.
+         4. Capex Evolution: Bar Chart. Goal: Trend. Justification: Shows management confidence through increased spending.
+         5. Checklist: Styled HTML/Tailwind Grid. Goal: Organize. Justification: Quick visual verification of key metrics.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Navigation / Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">2313</div>
+                <h1 class="text-xl font-bold text-gray-900">華通 Compeq <span class="text-sm font-normal text-gray-500 ml-2">| 2026 投資價值分析儀表板</span></h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">評等：看多 (Bullish)</div>
+                <div class="text-sm text-gray-500 hidden sm:block">資料日期：2026/01/09</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Intro Section -->
+        <section class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-indigo-500">
+            <h2 class="text-2xl font-bold mb-3">投資觀點總覽</h2>
+            <p class="text-gray-600 leading-relaxed mb-4">
+                本儀表板基於最新的法人研究報告（2026/01/09），針對華通 (2313) 進行深入的估值分析。
+                隨著<b>泰國廠產能翻倍</b>與<b>低軌衛星需求爆發</b>，市場大幅上修其 2026 年 EPS 預估至 <b>$7.61</b> 元。
+                下方互動區塊可協助您模擬不同情境下的合理股價，並檢視支撐此估值的關鍵營運指標。
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">目前股價區間</div>
+                    <div class="text-xl font-bold text-gray-800">$110 - $113</div>
+                </div>
+                <div class="bg-indigo-50 p-4 rounded-lg">
+                    <div class="text-xs text-indigo-500 uppercase tracking-wide">樂觀目標價 (20x PE)</div>
+                    <div class="text-xl font-bold text-indigo-700">$152</div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <div class="text-xs text-green-500 uppercase tracking-wide">潛在漲幅空間</div>
+                    <div class="text-xl font-bold text-green-700">+34% ~ +38%</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 1: Interactive Valuation Matrix -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-12">
+                <h3 class="text-xl font-bold text-gray-900 mb-2">1. 互動式估值模型 (Valuation Matrix)</h3>
+                <p class="text-sm text-gray-500 mb-6">調整下方的 EPS 預估值與本益比 (PE) 倍數，即時試算華通的合理股價區間。預設值為法人最新樂觀預期。</p>
+            </div>
+
+            <!-- Controls Side -->
+            <div class="lg:col-span-4 bg-white rounded-xl shadow-sm p-6 card-hover">
+                <div class="space-y-8">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="font-medium text-gray-700">2026 預估 EPS (元)</label>
+                            <span id="eps-display" class="text-indigo-600 font-bold text-xl">7.61</span>
+                        </div>
+                        <input type="range" id="eps-slider" min="6.00" max="9.00" step="0.01" value="7.61" class="slider-thumb">
+                        <div class="flex justify-between text-xs text-gray-400 mt-1">
+                            <span>保守 $6.46</span>
+                            <span>樂觀 $7.61</span>
+                            <span>超標 $9.00</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2 bg-gray-50 p-2 rounded">
+                            <span class="font-bold">驅動因子：</span>泰國廠良率、衛星板訂單佔比。
+                        </p>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="font-medium text-gray-700">給予本益比 (PE Ratio)</label>
+                            <span id="pe-display" class="text-indigo-600 font-bold text-xl">18x</span>
+                        </div>
+                        <input type="range" id="pe-slider" min="10" max="25" step="1" value="18" class="slider-thumb">
+                        <div class="flex justify-between text-xs text-gray-400 mt-1">
+                            <span>低標 10x</span>
+                            <span>過往平均 15x</span>
+                            <span>重新評價 20x+</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2 bg-gray-50 p-2 rounded">
+                            <span class="font-bold">評價邏輯：</span>衛星板佔比提升至 25% 以上將帶動市場給予更高評價 (Re-rating)。
+                        </p>
+                    </div>
+
+                    <div class="border-t pt-6">
+                        <div class="text-center">
+                            <div class="text-sm text-gray-500 mb-1">試算合理股價</div>
+                            <div id="price-display" class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">
+                                $137.0
+                            </div>
+                            <div id="price-comment" class="text-sm text-green-600 font-medium mt-2">
+                                較目前股價具吸引力
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Side -->
+            <div class="lg:col-span-8 bg-white rounded-xl shadow-sm p-6 card-hover">
+                <div class="flex justify-between items-end mb-4">
+                    <h4 class="font-bold text-gray-800">股價敏感度分析</h4>
+                    <div class="text-xs text-gray-500">單位：新台幣 (TWD)</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="valuationChart"></canvas>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mt-4 text-center text-sm text-gray-600">
+                    <div>
+                        <span class="block w-3 h-3 rounded-full bg-gray-400 mx-auto mb-1"></span>
+                        保守情境 (15x)
+                    </div>
+                    <div>
+                        <span class="block w-3 h-3 rounded-full bg-indigo-500 mx-auto mb-1"></span>
+                        當前試算
+                    </div>
+                    <div>
+                        <span class="block w-3 h-3 rounded-full bg-blue-400 mx-auto mb-1"></span>
+                        樂觀情境 (20x)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Growth Drivers Analysis -->
+        <section>
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-2">2. 成長驅動因子 (Growth Drivers)</h3>
+                <p class="text-sm text-gray-500">支撐 $7.61 EPS 的核心來自於產能的大幅擴張與資本支出的投入，顯示管理層對訂單的強烈信心。</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Capacity Expansion -->
+                <div class="bg-white rounded-xl shadow-sm p-6 card-hover">
+                    <h4 class="font-bold text-gray-800 mb-4 border-b pb-2">泰國廠產能躍進 (平方呎)</h4>
+                    <div class="flex flex-col md:flex-row items-center justify-around">
+                        <div class="chart-container" style="height: 250px; max-width: 250px;">
+                            <canvas id="capacityChart"></canvas>
+                        </div>
+                        <div class="mt-4 md:mt-0 text-left space-y-3">
+                            <div>
+                                <div class="text-xs text-gray-500">當前產能</div>
+                                <div class="text-xl font-bold text-gray-400">40萬</div>
+                            </div>
+                            <div class="text-2xl text-gray-300">⬇</div>
+                            <div>
+                                <div class="text-xs text-indigo-600 font-bold">擴充後產能</div>
+                                <div class="text-3xl font-bold text-indigo-600">80萬</div>
+                                <div class="text-xs text-green-600 font-medium">+100% 成長幅度</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capex Analysis -->
+                <div class="bg-white rounded-xl shadow-sm p-6 card-hover">
+                    <h4 class="font-bold text-gray-800 mb-4 border-b pb-2">資本支出上修趨勢 (億元)</h4>
+                    <p class="text-xs text-gray-500 mb-4">資本支出由 70 億上修至 90 億，暗示訂單能見度優於預期。</p>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="capexChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Operational Checklist -->
+        <section class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900">3. 營運達標檢查表 (Operational Checklist)</h3>
+                    <p class="text-sm text-gray-500 mt-1">持續追蹤關鍵指標，確認投資邏輯是否兌現。</p>
+                </div>
+                <div class="mt-4 md:mt-0 px-4 py-2 bg-indigo-50 rounded-lg text-indigo-700 text-sm font-medium">
+                    目前狀態：<span class="font-bold">超標達成 (Outperforming)</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- KPI 1 -->
+                <div class="border rounded-lg p-5 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-bold text-green-500">✓</span>
+                    </div>
+                    <h5 class="text-sm font-bold text-gray-500 uppercase">每月營收門檻</h5>
+                    <div class="mt-2 flex items-baseline">
+                        <span class="text-2xl font-bold text-gray-900">72.28</span>
+                        <span class="ml-1 text-sm text-gray-500">億元 (2025/12)</span>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>目標: 67.8 億</span>
+                            <span class="text-green-600 font-bold">達成率 106%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">2026年若維持此動能，營收將輕鬆達標。</p>
+                </div>
+
+                <!-- KPI 2 -->
+                <div class="border rounded-lg p-5 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-bold text-indigo-500">↑</span>
+                    </div>
+                    <h5 class="text-sm font-bold text-gray-500 uppercase">淨利率目標</h5>
+                    <div class="mt-2 flex items-baseline">
+                        <span class="text-2xl font-bold text-gray-900">> 10%</span>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                         <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">高毛利衛星板</span>
+                         <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">HDI 稼動率滿載</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">產品組合優化是守住雙位數淨利的關鍵。</p>
+                </div>
+
+                <!-- KPI 3 -->
+                <div class="border rounded-lg p-5 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-bold text-blue-500">★</span>
+                    </div>
+                    <h5 class="text-sm font-bold text-gray-500 uppercase">主要客戶動態</h5>
+                    <div class="mt-2 space-y-2">
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            <span class="text-sm font-medium">SpaceX</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                            <span class="text-sm font-medium">Amazon Kuiper</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">兩大低軌衛星運營商積極發射，需求強勁。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary Footer -->
+        <footer class="bg-gray-800 text-white rounded-xl p-8 text-center shadow-lg">
+            <h3 class="text-2xl font-bold mb-4">綜合評等：看多 (Bullish)</h3>
+            <p class="max-w-2xl mx-auto text-gray-300 mb-6">
+                華通目前股價尚未完全反映 2026 年產能翻倍帶來的獲利爆發。若營收與淨利維持當前水準，股價有望向合理區間 ($137) 甚至樂觀區間 ($152) 靠攏。
+            </p>
+            <div class="text-xs text-gray-500 border-t border-gray-700 pt-4">
+                <p>免責聲明：本儀表板僅供模擬分析使用，不代表任何形式之投資建議。投資人應獨立判斷並自負風險。</p>
+                <p>資料來源：2026/01/09 市場公開資訊與法人報告彙整。</p>
+            </div>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- Data & State ---
+        const reportData = {
+            currentPrice: [110, 113],
+            eps: {
+                conservative: 6.46,
+                optimistic: 7.61,
+                super: 9.00
+            },
+            pe: {
+                low: 15,
+                mid: 18,
+                high: 20
+            },
+            targets: {
+                conservative: 114,
+                reasonable: 137,
+                optimistic: 152
+            },
+            capex: {
+                original: 70,
+                revised: 90
+            }
+        };
+
+        // --- Chart Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initValuationChart();
+            initCapacityChart();
+            initCapexChart();
+            updateCalculations(); // Initial calculation
+        });
+
+        let valuationChartInstance;
+
+        // 1. Valuation Chart (Bar)
+        function initValuationChart() {
+            const ctx = document.getElementById('valuationChart').getContext('2d');
+            valuationChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['目前股價', '保守預估 (1x SD)', '即時試算', '樂觀預估 (2x SD)'],
+                    datasets: [{
+                        label: '股價 (TWD)',
+                        data: [111.5, reportData.targets.conservative, 137, reportData.targets.optimistic],
+                        backgroundColor: [
+                            '#9ca3af', // Gray for current
+                            '#d1d5db', // Light Gray for conservative
+                            '#4f46e5', // Indigo for Dynamic
+                            '#60a5fa'  // Blue for Optimistic
+                        ],
+                        borderRadius: 6,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '$ ' + context.raw.toFixed(1) + ' TWD';
+                                }
+                            }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: Math.round,
+                            font: { weight: 'bold' },
+                            color: '#4b5563'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 80,
+                            grid: { display: true, color: '#f3f4f6' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // 2. Capacity Chart (Doughnut)
+        function initCapacityChart() {
+            const ctx = document.getElementById('capacityChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['原有產能', '新增產能 (泰國)'],
+                    datasets: [{
+                        data: [40, 40],
+                        backgroundColor: ['#e5e7eb', '#4f46e5'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } }
+                    }
+                }
+            });
+        }
+
+        // 3. Capex Chart (Bar)
+        function initCapexChart() {
+            const ctx = document.getElementById('capexChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['原預估', '上修後'],
+                    datasets: [{
+                        label: '資本支出 (億元)',
+                        data: [70, 90],
+                        backgroundColor: ['#9ca3af', '#10b981'],
+                        borderRadius: 6,
+                        barPercentage: 0.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#374151',
+                            font: { weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                        x: { grid: { display: false } }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // --- Interaction Logic ---
+        const epsSlider = document.getElementById('eps-slider');
+        const peSlider = document.getElementById('pe-slider');
+        const epsDisplay = document.getElementById('eps-display');
+        const peDisplay = document.getElementById('pe-display');
+        const priceDisplay = document.getElementById('price-display');
+        const priceComment = document.getElementById('price-comment');
+
+        function updateCalculations() {
+            const eps = parseFloat(epsSlider.value);
+            const pe = parseInt(peSlider.value);
+            
+            // Update UI Numbers
+            epsDisplay.textContent = eps.toFixed(2);
+            peDisplay.textContent = pe + 'x';
+            
+            const calculatedPrice = eps * pe;
+            priceDisplay.textContent = '$' + calculatedPrice.toFixed(1);
+
+            // Update Comment
+            const currentPriceAvg = 111.5;
+            const diff = ((calculatedPrice - currentPriceAvg) / currentPriceAvg) * 100;
+            
+            if (diff > 20) {
+                priceComment.textContent = `顯著低估 (潛在漲幅 +${diff.toFixed(0)}%)`;
+                priceComment.className = "text-sm text-green-600 font-medium mt-2";
+            } else if (diff > 5) {
+                priceComment.textContent = `略為低估 (潛在漲幅 +${diff.toFixed(0)}%)`;
+                priceComment.className = "text-sm text-indigo-600 font-medium mt-2";
+            } else if (diff > -5) {
+                priceComment.textContent = `價格合理`;
+                priceComment.className = "text-sm text-gray-500 font-medium mt-2";
+            } else {
+                priceComment.textContent = `價格偏高 (風險增加)`;
+                priceComment.className = "text-sm text-orange-500 font-medium mt-2";
+            }
+
+            // Update Chart Data
+            if (valuationChartInstance) {
+                // Update the "Dynamic Calculation" bar (Index 2)
+                valuationChartInstance.data.datasets[0].data[2] = calculatedPrice;
+                valuationChartInstance.update();
+            }
+        }
+
+        // Event Listeners
+        epsSlider.addEventListener('input', updateCalculations);
+        peSlider.addEventListener('input', updateCalculations);
+
+    </script>
+</body>
+</html>
