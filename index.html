@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 投資研究資料庫 | 極簡版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        .card-hover:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-color: #3b82f6; /* Hover 時變藍色邊框 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- 頂部導航 -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="font-bold text-xl tracking-tight text-slate-800 flex items-center gap-2">
+                <i class="fas fa-folder-open text-blue-600"></i> 研究報告目錄
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-10">
+        
+        <!-- 搜尋欄 -->
+        <div class="mb-8 max-w-md mx-auto relative">
+            <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
+            <input type="text" id="searchInput" placeholder="輸入代號或名稱..." 
+                   class="w-full pl-10 pr-4 py-3 rounded-full border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition">
+        </div>
+
+        <!-- 股票卡片列表 -->
+        <div id="app" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- 自動生成內容 -->
+        </div>
+
+        <!-- 無結果提示 -->
+        <div id="noData" class="hidden text-center py-12 text-slate-400">
+            <p>查無資料</p>
+        </div>
+    </main>
+
+    <!-- ============================================ -->
+    <!--         極簡維護區：只需填這三項             -->
+    <!-- ============================================ -->
+    <script>
+        const stockData = [
+            // { id: "代號", name: "名稱", folder: "資料夾路徑" }
+            
+            { id: "2303", name: "聯華電子", folder: "./2303/" },
+            { id: "2330", name: "台積電", folder: "" }, // folder 為空代表還沒寫好
+            { id: "2454", name: "聯發科", folder: "" },
+            { id: "2603", name: "長榮海運", folder: "" },
+            { id: "3034", name: "聯詠", folder: "" }
+
+            // ★ 要新增就複製一行貼在下面
+        ];
+
+        // ============================================
+        //    自動生成邏輯
+        // ============================================
+        
+        function renderStocks(filterText = "") {
+            const container = document.getElementById('app');
+            const noData = document.getElementById('noData');
+            container.innerHTML = "";
+            
+            const filtered = stockData.filter(stock => 
+                stock.id.includes(filterText) || 
+                stock.name.includes(filterText)
+            );
+
+            if (filtered.length === 0) {
+                noData.classList.remove('hidden');
+                return;
+            } else {
+                noData.classList.add('hidden');
+            }
+
+            filtered.forEach(stock => {
+                const isReady = stock.folder !== "";
+                const link = isReady ? stock.folder : "#";
+                // 未完成的顯示淺灰色，完成的顯示正常
+                const opacity = isReady ? "bg-white opacity-100" : "bg-slate-100 opacity-60";
+                const cursor = isReady ? "cursor-pointer" : "cursor-default";
+                const iconColor = isReady ? "text-blue-600" : "text-slate-300";
+                const iconType = isReady ? "fa-chevron-right" : "fa-wrench"; // 完成顯示箭頭，未完成顯示維修圖示
+
+                const html = `
+                    <a href="${link}" class="block ${opacity} rounded-lg border border-slate-200 p-5 flex items-center justify-between card-hover transition duration-200 ${cursor}">
+                        <div>
+                            <div class="text-2xl font-bold text-slate-800 tracking-tight">${stock.id}</div>
+                            <div class="text-sm text-slate-500 font-medium mt-0.5">${stock.name}</div>
+                        </div>
+                        <div class="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
+                            <i class="fas ${iconType} ${iconColor}"></i>
+                        </div>
+                    </a>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderStocks();
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                renderStocks(e.target.value.trim());
+            });
+        });
+    </script>
+</body>
+</html>
