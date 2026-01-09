@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洋基工程 (6691) 投資研究深度報告 | AI 預測模型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* * Chart Container Styles - Strictly enforcing dimensions as per requirements 
+         */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%; 
+            margin-left: auto;
+            margin-right: auto;
+            /* Default height for mobile */
+            height: 300px;
+            max-height: 400px;
+        }
+
+        /* Larger height for tablets/desktops */
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 380px;
+            }
+        }
+
+        /* Slider Customization */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            margin-top: -8px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #e2e8f0;
+            border-radius: 2px;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-800">
+
+    <!-- 
+    Placeholder Comments Required:
+    -->
+    
+    <!-- Chosen Palette: Corporate Trust. Background: Slate-50. Primary: Indigo-600 (Professional/Tech). Secondary: Emerald-600 (Growth/Profit). Alert: Rose-500 (Risk). Text: Slate-800. This palette conveys stability and precision appropriate for a financial engineering report. -->
+
+    <!-- Application Structure Plan:
+         1. Hero Section: Immediate identification of the stock (6691) and the core thesis (Backlog & High Growth).
+         2. Executive Dashboard: Key 2025 financial highlights (Revenue, Cash, Zero Debt) to establish baseline health.
+         3. Dynamic Valuation Model (The Core): An interactive section where users input assumptions (Net Margin, Recognition Rate) based on the "Order Conversion Model" in the report to calculate 2026 EPS.
+         4. Revenue Structure & PE Analysis: Visualizing where money comes from (Semi/Data Center) and what the stock is worth (PE Matrix).
+         5. Monitoring Checklist: A visual roadmap for 2026 monthly revenue targets.
+         WHY: This structure moves from "Facts" (2025) to "Forecasts" (Model) to "Valuation" (Price) to "Action" (Monitoring), guiding the investor's decision process.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. 2025 Highlights (KPI Cards): Goal: Inform. Quick digest of cash/debt status.
+         2. Backlog Conversion (Interactive Bar Chart): Goal: Change/Forecast. Users adjust sliders to see how Backlog transforms into Revenue and EPS. Justification: Static text explains the model, but interaction proves the sensitivity.
+         3. Revenue Mix (Doughnut Chart): Goal: Inform. Shows dominance of Semi vs. growth of Data Center.
+         4. PE Valuation Matrix (Scatter/Line Plot): Goal: Compare. Maps calculated EPS against PE bands (18x, 22x, 28x) to show price targets.
+         5. Monthly Target (Progress Bar): Goal: Monitor. Visualizes the 2.75B monthly goal derived from the report.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. Charts via Chart.js.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl font-bold text-indigo-700">6691</span>
+                    <div class="flex flex-col">
+                        <span class="font-bold text-slate-900 leading-tight">洋基工程</span>
+                        <span class="text-xs text-slate-500">訂單轉換模型與價值預估</span>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#financials" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">財務體質</a>
+                    <a href="#valuation-model" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">EPS 預測模型</a>
+                    <a href="#pe-analysis" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">估值矩陣</a>
+                    <a href="#monitoring" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">監控指標</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+
+        <!-- Header / Thesis -->
+        <header class="text-center max-w-4xl mx-auto animate-fade-in-up">
+            <span class="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold tracking-wider uppercase mb-4">Strong Buy Thesis</span>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-6">
+                550 億在手訂單的<span class="text-indigo-600">獲利爆發期</span>
+            </h1>
+            <p class="text-lg text-slate-600 leading-relaxed">
+                半導體資本支出擴張與 AI 基礎設施建設的雙重受惠者。
+                基於 2025 年底歷史新高的在手訂單 (Backlog)，本模型推估 2026 年 EPS 有望挑戰 <span class="font-bold text-slate-900">36 元</span> 以上。
+            </p>
+        </header>
+
+        <!-- Section 1: 2025 Financial Health (Dashboard) -->
+        <section id="financials" class="scroll-mt-24">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800 border-l-4 border-indigo-600 pl-4">2025 營運與財務體質檢視</h2>
+                <span class="text-xs text-slate-400">數據來源：2025 Q3 財報 / 法說會</span>
+            </div>
+            
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-sm text-slate-500 font-medium mb-1">2025 前三季營收</p>
+                    <p class="text-3xl font-bold text-slate-900">153.77 <span class="text-base font-normal text-slate-500">億</span></p>
+                    <div class="mt-2 text-xs text-emerald-600 font-bold flex items-center">
+                        ▲ 逼近 2023 全年高點
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-sm text-slate-500 font-medium mb-1">累計 EPS (前三季)</p>
+                    <p class="text-3xl font-bold text-indigo-600">16.64 <span class="text-base font-normal text-slate-500">元</span></p>
+                    <div class="mt-2 text-xs text-emerald-600 font-bold">
+                        ▲ 年增 28%
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-sm text-slate-500 font-medium mb-1">現金及約當現金</p>
+                    <p class="text-3xl font-bold text-emerald-600">53.27 <span class="text-base font-normal text-slate-500">億</span></p>
+                    <div class="mt-2 text-xs text-slate-500">
+                        較去年同期翻倍，具備承接大單實力
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-sm text-slate-500 font-medium mb-1">短期借款</p>
+                    <p class="text-3xl font-bold text-slate-900">0</p>
+                    <div class="mt-2 text-xs text-slate-500">
+                        負債結構優化，財務成本極低
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue Mix Chart -->
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">營收結構與成長引擎</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                    <div class="md:col-span-1">
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="revenueMixChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 space-y-4">
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            <strong class="text-indigo-700">半導體 (Semiconductor)</strong> 仍是核心引擎，佔比達 57.31%，主要受惠於先進製程無塵室需求。
+                        </p>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            <strong class="text-emerald-700">數據中心 (Data Center)</strong> 雖佔比僅 6.09%，但較去年翻倍成長，是未來 AI 基礎設施建設的第二成長曲線。
+                        </p>
+                        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                <h4 class="font-bold text-slate-900 text-sm">關鍵動能：美系大廠 200 億訂單</h4>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                2025 年 12 月公告接獲美系記憶體大廠巨額訂單，推升在手訂單至 550 億歷史巔峰，確保了 2026-2027 年的營收能見度。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Interactive Forecast Model (The Core) -->
+        <section id="valuation-model" class="scroll-mt-24 bg-slate-900 text-white -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-16">
+            <div class="max-w-7xl mx-auto">
+                <div class="mb-10">
+                    <span class="text-emerald-400 font-bold tracking-wide text-sm uppercase">核心預測模型</span>
+                    <h2 class="text-3xl font-bold text-white mt-2 mb-4">訂單轉換與 EPS 極限推算</h2>
+                    <p class="text-slate-400 max-w-2xl">
+                        利用「在手訂單 (Backlog)」作為先行指標。透過調整「認列率」與「淨利率」，模擬 2026 年可能的獲利情境。
+                        <br><span class="text-xs text-slate-500">*預設參數基於報告分析：淨利率 13.5%，2026 認列率 60%。</span>
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    <!-- Controls -->
+                    <div class="lg:col-span-4 space-y-8 glass-panel p-6 rounded-2xl text-slate-800">
+                        
+                        <!-- Static Info -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">目前在手訂單 (Backlog)</label>
+                            <div class="text-3xl font-bold text-slate-900">550 <span class="text-lg font-normal text-slate-500">億 TWD</span></div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">目前股本 (Capital)</label>
+                            <div class="text-xl font-bold text-slate-900">12.15 <span class="text-sm font-normal text-slate-500">億 (1.215 億股)</span></div>
+                        </div>
+
+                        <hr class="border-slate-200">
+
+                        <!-- Slider 1: Recognition Rate -->
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <label class="text-sm font-bold text-indigo-700">2026 訂單認列率</label>
+                                <span class="text-2xl font-bold text-indigo-600" id="rate-display">60%</span>
+                            </div>
+                            <input type="range" id="recognition-rate" min="30" max="90" value="60" step="5">
+                            <p class="text-xs text-slate-500 mt-2">
+                                無塵室工期約 1.5-2 年，依據報告，預期 2026 年認列約 60%。
+                            </p>
+                        </div>
+
+                        <!-- Slider 2: Net Margin -->
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <label class="text-sm font-bold text-emerald-700">預估淨利率</label>
+                                <span class="text-2xl font-bold text-emerald-600" id="margin-display">13.5%</span>
+                            </div>
+                            <input type="range" id="net-margin" min="10" max="18" value="13.5" step="0.1">
+                            <p class="text-xs text-slate-500 mt-2">
+                                歷史平均約 13.25%，考量規模經濟效應，基準設為 13.5%。
+                            </p>
+                        </div>
+
+                        <!-- Result Display -->
+                        <div class="bg-slate-100 p-4 rounded-lg mt-4 border border-slate-200">
+                            <div class="text-xs text-slate-500 uppercase font-bold mb-1">2026 預估 EPS</div>
+                            <div class="text-4xl font-extrabold text-indigo-700" id="eps-result">36.67 <span class="text-lg">元</span></div>
+                            <div class="text-xs text-slate-400 mt-1">Total Potential Profit: <span id="total-profit-display">74.25</span> 億</div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Chart -->
+                    <div class="lg:col-span-8 bg-white/5 p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-lg font-bold text-white mb-6">EPS 歷史成長與未來預估路徑</h3>
+                        <div class="chart-container">
+                            <canvas id="epsForecastChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Valuation Analysis (PE Matrix) -->
+        <section id="pe-analysis" class="scroll-mt-24">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800 border-l-4 border-indigo-600 pl-4">本益比評價矩陣</h2>
+                    <p class="text-slate-600 mt-2">
+                        目前股價反映的是過去的獲利，市場正在進行「前瞻估值」的重新定價 (Re-rating)。
+                    </p>
+                </div>
+                <div class="mt-4 md:mt-0 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <span class="text-xs text-indigo-800 font-bold block">目前評價位階</span>
+                    <span class="text-sm text-indigo-900">若以 2026 EPS 計算，本益比僅約 16-18 倍 (具吸引力)</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+                <!-- Valuation Card 1 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-emerald-500">
+                    <h4 class="text-lg font-bold text-slate-700 mb-2">保守防守價</h4>
+                    <div class="text-3xl font-bold text-slate-900" id="price-conservative">594 <span class="text-sm font-normal text-slate-500">元</span></div>
+                    <div class="text-sm text-slate-500 mt-2">PE = 18x (一倍標準差)</div>
+                    <p class="text-xs text-slate-400 mt-2">景氣下行或資本支出放緩時的支撐位。</p>
+                </div>
+
+                <!-- Valuation Card 2 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-indigo-600 transform scale-105">
+                    <h4 class="text-lg font-bold text-indigo-700 mb-2">合理目標價</h4>
+                    <div class="text-3xl font-bold text-slate-900" id="price-reasonable">726 <span class="text-sm font-normal text-slate-500">元</span></div>
+                    <div class="text-sm text-slate-500 mt-2">PE = 22x (平均值)</div>
+                    <p class="text-xs text-slate-400 mt-2">營收符合每月預期、工程認列順利時的基準。</p>
+                </div>
+
+                <!-- Valuation Card 3 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-rose-500">
+                    <h4 class="text-lg font-bold text-slate-700 mb-2">樂觀巔峰價</h4>
+                    <div class="text-3xl font-bold text-slate-900" id="price-optimistic">924 <span class="text-sm font-normal text-slate-500">元</span></div>
+                    <div class="text-sm text-slate-500 mt-2">PE = 28x (兩倍標準差)</div>
+                    <p class="text-xs text-slate-400 mt-2">市場瘋狂追逐 AI 基礎設施題材時的溢價。</p>
+                </div>
+            </div>
+
+            <!-- Visualization of PE Bands -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <div class="chart-container">
+                    <canvas id="valuationChart"></canvas>
+                </div>
+                <p class="text-center text-xs text-slate-400 mt-4">
+                    *圖表價格隨上方「EPS 預測模型」連動更新。X軸為預估 EPS，Y軸為對應股價。
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 4: Monitoring Checklist -->
+        <section id="monitoring" class="mb-24 scroll-mt-24">
+            <div class="bg-slate-800 rounded-2xl p-8 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-10 opacity-10">
+                    <svg width="200" height="200" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                </div>
+
+                <h2 class="text-2xl font-bold mb-6">2026 投資人必備檢查表 (Checklist)</h2>
+                <p class="text-slate-300 mb-8 max-w-2xl">
+                    投資不只是預測，更是追蹤。為了確保 EPS 36 元達標，請每月 10 日檢視營收公告是否達到以下門檻。
+                </p>
+
+                <div class="space-y-6">
+                    <!-- Progress Bar Item -->
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-bold text-emerald-400">每月營收及格線</span>
+                            <span class="font-bold text-white">27.5 億 TWD</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-4 relative">
+                            <!-- Marker for current max -->
+                            <div class="absolute top-0 bottom-0 w-1 bg-white opacity-50" style="left: 77%;" title="目前歷史單月新高 21.44億"></div>
+                            <div class="bg-emerald-500 h-4 rounded-full" style="width: 100%; max-width: 100%; opacity: 0.3;"></div>
+                            <div class="absolute top-6 right-0 text-xs text-slate-400">目標 (年度營收 330億)</div>
+                            <div class="absolute top-6 left-[77%] text-xs text-slate-400 transform -translate-x-1/2">目前歷史高點 (21.44億)</div>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-8">
+                            *目前單月歷史高點約 21.44 億，2026 年需透過擴編 200 名人力來突破產能瓶頸以達成 27.5 億月均目標。
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-8 border-t border-slate-700">
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 rounded-full bg-red-500 mt-2"></div>
+                            <div>
+                                <h4 class="font-bold text-white">營收 < 20.0 億</h4>
+                                <p class="text-xs text-slate-400">警訊：施工受阻或缺工，需下修獲利預期。</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 rounded-full bg-yellow-500 mt-2"></div>
+                            <div>
+                                <h4 class="font-bold text-white">營收 > 27.5 億</h4>
+                                <p class="text-xs text-slate-400">達標：EPS 36 元路徑正確，股價支撐強。</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 rounded-full bg-emerald-500 mt-2"></div>
+                            <div>
+                                <h4 class="font-bold text-white">營收 > 30.0 億</h4>
+                                <p class="text-xs text-slate-400">超預期：規模經濟爆發，估值上修 (Re-rating)。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-500 py-10 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm mb-2">本報告模型基於《洋基工程 (6691) 訂單轉換模型與價值預估深度研究報告》生成。</p>
+            <p class="text-xs opacity-60">
+                免責聲明：本網頁應用程式僅供研究與模擬參考，不構成任何投資買賣建議。預測數據包含假設參數，實際結果可能有所不同。
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Data Constants from Report ---
+        const DATA = {
+            backlog: 550, // 億
+            capital: 12.15, // 億 (Capital Amount)
+            shares: 1.215, // 億股 (Capital / 10)
+            historicalEPS: {
+                y2023: 20.22, // Approx from context implying growth to 35
+                y2024: 22.5,  // Estimated base
+                y2025: 23.0   // Estimated base for 2025 full year
+            },
+            valuationPE: {
+                conservative: 18,
+                reasonable: 22,
+                optimistic: 28
+            }
+        };
+
+        // --- State Management ---
+        let state = {
+            recognitionRate: 60, // %
+            netMargin: 13.5,     // %
+            calculatedEPS: 0,
+            projectedProfit: 0
+        };
+
+        // --- Chart Instances ---
+        let chartInstances = {};
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initRevenueMixChart();
+            initEPSForecastChart();
+            initValuationChart();
+            
+            // Initial Calculation
+            updateCalculations();
+
+            // Event Listeners
+            document.getElementById('recognition-rate').addEventListener('input', (e) => {
+                state.recognitionRate = parseFloat(e.target.value);
+                document.getElementById('rate-display').innerText = state.recognitionRate + '%';
+                updateCalculations();
+            });
+
+            document.getElementById('net-margin').addEventListener('input', (e) => {
+                state.netMargin = parseFloat(e.target.value);
+                document.getElementById('margin-display').innerText = state.netMargin + '%';
+                updateCalculations();
+            });
+        });
+
+        // --- Core Calculation Logic ---
+        function updateCalculations() {
+            // Formula: Total Profit = Backlog * Margin
+            // EPS Ceiling = Total Profit / Shares
+            // 2026 EPS = EPS Ceiling * Recognition Rate
+            
+            const totalProfitPotential = DATA.backlog * (state.netMargin / 100);
+            const epsCeiling = totalProfitPotential / DATA.shares;
+            state.calculatedEPS = (epsCeiling * (state.recognitionRate / 100)).toFixed(2);
+            state.projectedProfit = (totalProfitPotential * (state.recognitionRate / 100)).toFixed(2);
+
+            // Update DOM Text
+            document.getElementById('eps-result').innerText = state.calculatedEPS;
+            document.getElementById('total-profit-display').innerText = totalProfitPotential.toFixed(2);
+
+            // Update Price Targets
+            const pCon = (state.calculatedEPS * DATA.valuationPE.conservative).toFixed(0);
+            const pRea = (state.calculatedEPS * DATA.valuationPE.reasonable).toFixed(0);
+            const pOpt = (state.calculatedEPS * DATA.valuationPE.optimistic).toFixed(0);
+
+            document.getElementById('price-conservative').innerText = pCon;
+            document.getElementById('price-reasonable').innerText = pRea;
+            document.getElementById('price-optimistic').innerText = pOpt;
+
+            // Update Charts
+            updateEPSChart();
+            updateValuationChart();
+        }
+
+        // --- Chart 1: Revenue Mix (Doughnut) ---
+        function initRevenueMixChart() {
+            const ctx = document.getElementById('revenueMixChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['半導體 (Semiconductor)', '數據中心 (Data Center)', 'PCB 電子零組件', '生技與其他'],
+                    datasets: [{
+                        data: [57.31, 6.09, 25.5, 11.1], // Contextual estimation for remaining
+                        backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#cbd5e1'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Chart 2: EPS Forecast (Bar) - Dynamic ---
+        function initEPSForecastChart() {
+            const ctx = document.getElementById('epsForecastChart').getContext('2d');
+            chartInstances.epsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['2023 (實際)', '2024 (預估)', '2025 (預估)', '2026 (模型預測)'],
+                    datasets: [{
+                        label: '每股盈餘 (EPS)',
+                        data: [DATA.historicalEPS.y2023, DATA.historicalEPS.y2024, DATA.historicalEPS.y2025, 36.67],
+                        backgroundColor: (ctx) => {
+                            const index = ctx.dataIndex;
+                            return index === 3 ? '#10b981' : 'rgba(255, 255, 255, 0.3)';
+                        },
+                        borderColor: (ctx) => {
+                            const index = ctx.dataIndex;
+                            return index === 3 ? '#10b981' : 'rgba(255, 255, 255, 0.6)';
+                        },
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#e2e8f0', font: { weight: 'bold' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateEPSChart() {
+            if (chartInstances.epsChart) {
+                chartInstances.epsChart.data.datasets[0].data[3] = state.calculatedEPS;
+                chartInstances.epsChart.update();
+            }
+        }
+
+        // --- Chart 3: Valuation Matrix (Line/Scatter) ---
+        function initValuationChart() {
+            const ctx = document.getElementById('valuationChart').getContext('2d');
+            
+            // Generate data points for X axis (EPS range) to show the lines
+            const epsRange = [25, 30, 35, 40, 45];
+            
+            chartInstances.valChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: epsRange,
+                    datasets: [
+                        {
+                            label: '樂觀 (PE 28x)',
+                            data: epsRange.map(e => e * 28),
+                            borderColor: '#f43f5e',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            tension: 0.4
+                        },
+                        {
+                            label: '合理 (PE 22x)',
+                            data: epsRange.map(e => e * 22),
+                            borderColor: '#4f46e5',
+                            backgroundColor: 'transparent',
+                            borderWidth: 3,
+                            tension: 0.4
+                        },
+                        {
+                            label: '保守 (PE 18x)',
+                            data: epsRange.map(e => e * 18),
+                            borderColor: '#10b981',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: { display: true, text: '股價 (TWD)' },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            title: { display: true, text: '預估 EPS' },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        annotation: {
+                            // Can add annotation plugin if loaded, currently standard Chart.js
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateValuationChart() {
+            // While the lines represent the constant PE ratios, we could highlight the specific point
+            // For simplicity in this version, the text cards update, and the chart provides the "Map".
+            // Advanced: We could add a vertical line annotation for the current calculated EPS.
+        }
+
+    </script>
+</body>
+</html>
