@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台積電 (2330.TW) 深度估值報告 - AI 投資研究預測員</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #e2e8f0; /* Slate 200 */
+        }
+        .card-gradient {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid #334155;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .highlight-text {
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .sidebar-link.active {
+            background-color: #334155;
+            border-left: 4px solid #60a5fa;
+            color: #fff;
+        }
+        .sidebar-link:hover {
+            background-color: #1e293b;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-700 hidden md:flex flex-col z-20">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                    AI
+                </div>
+                <div>
+                    <h1 class="font-bold text-white tracking-wide">AI 投資預測員</h1>
+                    <p class="text-xs text-slate-400">財務建模強化版</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-4">
+            <a href="#dashboard" onclick="switchTab('dashboard')" class="sidebar-link active flex items-center px-6 py-3 text-slate-300 transition-colors">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="font-medium">總覽儀表板</span>
+            </a>
+            <a href="#financials" onclick="switchTab('financials')" class="sidebar-link flex items-center px-6 py-3 text-slate-300 transition-colors">
+                <i class="fas fa-file-invoice-dollar w-6"></i>
+                <span class="font-medium">財務數據鑑識</span>
+            </a>
+            <a href="#model" onclick="switchTab('model')" class="sidebar-link flex items-center px-6 py-3 text-slate-300 transition-colors">
+                <i class="fas fa-calculator w-6"></i>
+                <span class="font-medium">EPS 極限模型</span>
+            </a>
+            <a href="#valuation" onclick="switchTab('valuation')" class="sidebar-link flex items-center px-6 py-3 text-slate-300 transition-colors">
+                <i class="fas fa-tags w-6"></i>
+                <span class="font-medium">估值矩陣計算</span>
+            </a>
+            <a href="#risks" onclick="switchTab('risks')" class="sidebar-link flex items-center px-6 py-3 text-slate-300 transition-colors">
+                <i class="fas fa-shield-alt w-6"></i>
+                <span class="font-medium">風險與結論</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-700 bg-slate-800/50">
+            <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                <span>報告日期</span>
+                <span class="text-white">2026/01/10</span>
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-400">
+                <span>標的</span>
+                <span class="text-blue-400 font-bold">2330.TW</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative overflow-hidden">
+        <!-- Mobile Header -->
+        <header class="md:hidden flex items-center justify-between p-4 bg-slate-900 border-b border-slate-700">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">AI</div>
+                <span class="font-bold text-white">台積電估值報告</span>
+            </div>
+            <button onclick="toggleMobileMenu()" class="text-slate-300 hover:text-white">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </header>
+
+        <!-- Mobile Menu Overlay -->
+        <div id="mobileMenu" class="fixed inset-0 bg-slate-900 z-50 transform translate-x-full transition-transform duration-300 md:hidden flex flex-col">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                <span class="font-bold text-white">選單</span>
+                <button onclick="toggleMobileMenu()" class="text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <nav class="flex-1 py-4">
+                <a href="#dashboard" onclick="mobileNav('dashboard')" class="block px-6 py-4 text-slate-300 hover:bg-slate-800 border-b border-slate-800">總覽儀表板</a>
+                <a href="#financials" onclick="mobileNav('financials')" class="block px-6 py-4 text-slate-300 hover:bg-slate-800 border-b border-slate-800">財務數據鑑識</a>
+                <a href="#model" onclick="mobileNav('model')" class="block px-6 py-4 text-slate-300 hover:bg-slate-800 border-b border-slate-800">EPS 極限模型</a>
+                <a href="#valuation" onclick="mobileNav('valuation')" class="block px-6 py-4 text-slate-300 hover:bg-slate-800 border-b border-slate-800">估值矩陣</a>
+                <a href="#risks" onclick="mobileNav('risks')" class="block px-6 py-4 text-slate-300 hover:bg-slate-800 border-b border-slate-800">風險與結論</a>
+            </nav>
+        </div>
+
+        <!-- Content Scroll Area -->
+        <div id="contentArea" class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+            
+            <!-- SECTION: Dashboard -->
+            <div id="dashboard" class="content-section space-y-6">
+                <!-- Hero Header -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
+                    <div>
+                        <span class="inline-block px-3 py-1 bg-blue-900/50 text-blue-300 rounded-full text-xs font-semibold mb-2 border border-blue-700/50">深度覆蓋報告</span>
+                        <h2 class="text-3xl md:text-4xl font-bold text-white mb-1">台積電 <span class="text-slate-400 text-2xl font-normal">(2330.TW)</span></h2>
+                        <p class="text-slate-400 text-sm md:text-base">矽盾之王與 AI 運算霸權的終極定價 (2026-2030)</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl font-bold highlight-text tracking-tight">NT$ 2,100</div>
+                        <div class="text-sm text-slate-400">12個月目標價 (Based on 26x 2026F EPS)</div>
+                    </div>
+                </div>
+
+                <!-- Top Metrics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="card-gradient rounded-xl p-5 relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-green-500/10 rounded-full -mr-6 -mt-6 group-hover:bg-green-500/20 transition-all"></div>
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">評級 (Rating)</h3>
+                        <div class="text-2xl font-bold text-green-400">Conviction Buy</div>
+                        <div class="text-xs text-green-500 mt-2 flex items-center gap-1">
+                            <i class="fas fa-arrow-up"></i> 強力買入
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-5 relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-full -mr-6 -mt-6 group-hover:bg-blue-500/20 transition-all"></div>
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">2026F 營收 (Revenue)</h3>
+                        <div class="text-2xl font-bold text-white">4.95 兆 <span class="text-sm font-normal text-slate-400">TWD</span></div>
+                        <div class="text-xs text-blue-400 mt-2 flex items-center gap-1">
+                            <i class="fas fa-arrow-up"></i> YoY +30.0%
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-5 relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 rounded-full -mr-6 -mt-6 group-hover:bg-purple-500/20 transition-all"></div>
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">2026F EPS</h3>
+                        <div class="text-2xl font-bold text-white">80.21 <span class="text-sm font-normal text-slate-400">TWD</span></div>
+                        <div class="text-xs text-purple-400 mt-2 flex items-center gap-1">
+                            <i class="fas fa-bolt"></i> 歷史新高預期
+                        </div>
+                    </div>
+
+                    <div class="card-gradient rounded-xl p-5 relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-orange-500/10 rounded-full -mr-6 -mt-6 group-hover:bg-orange-500/20 transition-all"></div>
+                        <h3 class="text-slate-400 text-sm font-medium mb-1">2030 長期願景</h3>
+                        <div class="text-2xl font-bold text-white">NT$ 4,200+</div>
+                        <div class="text-xs text-orange-400 mt-2 flex items-center gap-1">
+                            <i class="fas fa-binoculars"></i> 基於 AI 全面普及
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Chart Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Revenue & EPS Chart -->
+                    <div class="card-gradient rounded-xl p-6 lg:col-span-2">
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-area text-blue-500"></i> 營收與獲利成長預測 (2025-2030)
+                        </h3>
+                        <div class="h-72 w-full">
+                            <canvas id="growthChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Mix Chart -->
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-pie text-purple-500"></i> 2026 營收結構預估
+                        </h3>
+                        <div class="h-60 w-full flex justify-center">
+                            <canvas id="mixChart"></canvas>
+                        </div>
+                        <div class="mt-4 space-y-2 text-sm text-slate-300">
+                            <div class="flex justify-between">
+                                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> HPC (AI/Data Center)</span>
+                                <span class="font-bold">62%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span> Smartphone</span>
+                                <span class="font-bold">28%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-gray-500"></span> IoT/Auto/Others</span>
+                                <span class="font-bold">10%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investment Thesis -->
+                <div class="card-gradient rounded-xl p-6 border-l-4 border-l-blue-500">
+                    <h3 class="text-xl font-bold text-white mb-3">核心投資論述：AI 基礎設施公用事業</h3>
+                    <div class="space-y-3 text-slate-300 leading-relaxed">
+                        <p>截至 2026 年初，台積電已成功驗證了 AI 超級循環的真實性。2025 年營收年增 31.6%，證明了其不僅是製造商，更是全球數位經濟的「基礎設施」。</p>
+                        <p>我們認為市場仍低估了以下三點：</p>
+                        <ul class="list-disc list-inside space-y-1 ml-2 text-slate-400">
+                            <li><strong class="text-white">N2 世代定價權：</strong> Apple 與 Nvidia 搶佔 2nm 產能，定價能力前所未有。</li>
+                            <li><strong class="text-white">CoWoS 護城河：</strong> 先進封裝成為摩爾定律延續的關鍵，台積電在此領域具壟斷地位。</li>
+                            <li><strong class="text-white">營收結構重估：</strong> AI 營收佔比突破 60%，估值邏輯應從「週期製造」轉向「高成長科技壟斷」。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Financial Forensics -->
+            <div id="financials" class="content-section hidden space-y-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <h2 class="text-3xl font-bold text-white">2025 財務數據鑑識</h2>
+                    <span class="px-3 py-1 bg-green-900/50 text-green-400 rounded-full text-xs border border-green-700">法醫式審計</span>
+                </div>
+
+                <!-- Key Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
+                        <div class="text-slate-400 text-sm">2025 全年營收</div>
+                        <div class="text-2xl font-bold text-white mt-1">NT$ 3.81 兆</div>
+                        <div class="text-green-400 text-sm mt-1">▲ 31.6% YoY (超標)</div>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
+                        <div class="text-slate-400 text-sm">Q3 毛利率</div>
+                        <div class="text-2xl font-bold text-white mt-1">59.5%</div>
+                        <div class="text-green-400 text-sm mt-1">優於財測 57.5%</div>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
+                        <div class="text-slate-400 text-sm">應付工程款 (擴產指標)</div>
+                        <div class="text-2xl font-bold text-white mt-1">NT$ 1,754 億</div>
+                        <div class="text-blue-400 text-sm mt-1">顯示訂單能見度極高</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Shadow Backlog Analysis -->
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2">影子訂單簿 (Shadow Backlog) 分析</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-microchip text-blue-400"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-white">Broadcom (AVGO)</h4>
+                                    <p class="text-sm text-slate-400 mt-1">公開積壓訂單達 730 億美元。推估其中 20-25% 為台積電製造營收，鎖定未來 1.5 年訂單。</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-server text-green-400"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-white">Nvidia CoWoS 包場</h4>
+                                    <p class="text-sm text-slate-400 mt-1">供應鏈顯示 Nvidia 已預訂 2026 年 40-50% CoWoS 產能，確保 Blackwell/Rubin 出貨。</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                    <i class="fab fa-apple text-gray-300"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-white">Apple N2 鎖單</h4>
+                                    <p class="text-sm text-slate-400 mt-1">預訂首批 2nm 產能 50% 以上，用於 A20/M6 晶片，消除新製程初期閒置風險。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profitability Analysis -->
+                    <div class="card-gradient rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2">獲利能力透視</h3>
+                        <p class="text-slate-300 mb-4 text-sm">即使面臨海外設廠的高成本與折舊壓力，台積電仍維持近 60% 毛利率，證明其強大的定價權 (Pricing Power)。</p>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-400">3nm (N3) 營收佔比</span>
+                                    <span class="text-white font-bold">23%</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 23%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-400">5nm (N5) 營收佔比</span>
+                                    <span class="text-white font-bold">37%</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div class="bg-blue-400 h-2 rounded-full" style="width: 37%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-400">先進製程 (7nm以下) 合計</span>
+                                    <span class="text-white font-bold">74%</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-blue-600 to-purple-500 h-2 rounded-full" style="width: 74%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 p-3 bg-slate-800 rounded text-xs text-slate-400 border border-slate-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            先進製程佔比越高，產品平均單價 (ASP) 越高，抵禦景氣波動能力越強。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Model -->
+            <div id="model" class="content-section hidden space-y-6">
+                <h2 class="text-3xl font-bold text-white mb-4">EPS 極限值模型 (2026-2030)</h2>
+                
+                <div class="overflow-x-auto rounded-xl border border-slate-700">
+                    <table class="w-full text-sm text-left text-slate-300">
+                        <thead class="text-xs text-slate-400 uppercase bg-slate-800">
+                            <tr>
+                                <th class="px-6 py-4">項目 (NTD)</th>
+                                <th class="px-6 py-4">2025 (A)</th>
+                                <th class="px-6 py-4 text-blue-400">2026 (F)</th>
+                                <th class="px-6 py-4">2027 (F)</th>
+                                <th class="px-6 py-4">2028 (F)</th>
+                                <th class="px-6 py-4">2029 (F)</th>
+                                <th class="px-6 py-4 text-purple-400">2030 (F)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700 bg-slate-900">
+                            <tr class="hover:bg-slate-800/50">
+                                <td class="px-6 py-4 font-medium text-white">營業收入 (兆)</td>
+                                <td class="px-6 py-4">3.81</td>
+                                <td class="px-6 py-4 font-bold text-blue-300">4.95</td>
+                                <td class="px-6 py-4">5.94</td>
+                                <td class="px-6 py-4">7.13</td>
+                                <td class="px-6 py-4">8.20</td>
+                                <td class="px-6 py-4 font-bold text-purple-300">9.43</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/50">
+                                <td class="px-6 py-4">年增率 (YoY)</td>
+                                <td class="px-6 py-4 text-green-400">+31.6%</td>
+                                <td class="px-6 py-4 text-green-400">+30.0%</td>
+                                <td class="px-6 py-4">+20.0%</td>
+                                <td class="px-6 py-4">+20.0%</td>
+                                <td class="px-6 py-4">+15.0%</td>
+                                <td class="px-6 py-4">+15.0%</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/50">
+                                <td class="px-6 py-4">稅後淨利 (兆)</td>
+                                <td class="px-6 py-4">1.60</td>
+                                <td class="px-6 py-4">2.10</td>
+                                <td class="px-6 py-4">2.55</td>
+                                <td class="px-6 py-4">3.14</td>
+                                <td class="px-6 py-4">3.65</td>
+                                <td class="px-6 py-4">4.24</td>
+                            </tr>
+                            <tr class="bg-slate-800/30 hover:bg-slate-800/50">
+                                <td class="px-6 py-4 font-bold text-white">EPS (元)</td>
+                                <td class="px-6 py-4">61.70</td>
+                                <td class="px-6 py-4 font-bold text-blue-300 text-lg">81.13</td>
+                                <td class="px-6 py-4">98.50</td>
+                                <td class="px-6 py-4">121.09</td>
+                                <td class="px-6 py-4">140.76</td>
+                                <td class="px-6 py-4 font-bold text-purple-300 text-lg">163.66</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                        <h3 class="text-white font-bold mb-3">模型關鍵假設</h3>
+                        <ul class="space-y-3 text-sm text-slate-300">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-1"></i>
+                                <span><strong>營收成長：</strong> 2026年受惠 CoWoS 產能倍增與 N3 漲價，設定為 30%。後續年份隨基期墊高逐步收斂至 15-20%。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-1"></i>
+                                <span><strong>毛利率：</strong> 雖然海外廠折舊增加，但 N2 定價預計突破 $25,000/片，長期毛利率維持 58-60%。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-green-500 mt-1"></i>
+                                <span><strong>股本：</strong> 假設股本維持 259.3 億股不變，以現金股利為主。</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                        <h3 class="text-white font-bold mb-3">極限值情境 (The Limit Case)</h3>
+                        <p class="text-sm text-slate-300 mb-3">所謂「EPS 極限值」，是指產能利用率 100% 且良率成熟的最佳情境。</p>
+                        <div class="p-3 bg-slate-900 rounded border border-slate-700 mb-2">
+                            <div class="text-xs text-slate-400">2026 極限 EPS</div>
+                            <div class="text-xl font-bold text-blue-400">NT$ 85.90</div>
+                            <div class="text-xs text-slate-500">若 N3E/N3P 完全滿載</div>
+                        </div>
+                        <div class="p-3 bg-slate-900 rounded border border-slate-700">
+                            <div class="text-xs text-slate-400">2030 極限 EPS</div>
+                            <div class="text-xl font-bold text-purple-400">NT$ 170.29</div>
+                            <div class="text-xs text-slate-500">若 AI 邊緣裝置爆發</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Valuation Calculator -->
+            <div id="valuation" class="content-section hidden space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <h2 class="text-3xl font-bold text-white">互動式估值矩陣</h2>
+                    <div class="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+                        拖動滑桿以查看不同情境下的目標價
+                    </div>
+                </div>
+
+                <!-- Calculator Area -->
+                <div class="card-gradient p-8 rounded-xl border border-blue-500/30 shadow-lg shadow-blue-900/10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <!-- Inputs -->
+                        <div class="space-y-8">
+                            <div>
+                                <label class="flex justify-between text-slate-300 font-medium mb-2">
+                                    <span>預估 EPS (元)</span>
+                                    <span id="epsValueDisplay" class="text-blue-400 font-bold">81.13</span>
+                                </label>
+                                <input type="range" id="epsInput" min="60" max="180" step="0.1" value="81.13" 
+                                    class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                                <div class="flex justify-between text-xs text-slate-500 mt-1">
+                                    <span>2025A (61.7)</span>
+                                    <span>2026F (81.1)</span>
+                                    <span>2030F (163.6)</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="flex justify-between text-slate-300 font-medium mb-2">
+                                    <span>給予本益比 (PE)</span>
+                                    <span id="peValueDisplay" class="text-purple-400 font-bold">26.0</span>
+                                </label>
+                                <input type="range" id="peInput" min="15" max="35" step="0.5" value="26.0" 
+                                    class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                                <div class="flex justify-between text-xs text-slate-500 mt-1">
+                                    <span>熊市 (15x)</span>
+                                    <span>合理 (25x)</span>
+                                    <span>狂熱 (35x)</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-slate-800/50 rounded-lg border border-slate-700 text-sm text-slate-400">
+                                <p><i class="fas fa-lightbulb text-yellow-500 mr-2"></i><strong>分析師觀點：</strong></p>
+                                <p class="mt-1">目前市場正進行結構性重估 (Re-rating)。隨著台積電轉型為 AI 公用事業，合理 PE 應從過去的 18-20x 上修至 25-28x。</p>
+                            </div>
+                        </div>
+
+                        <!-- Result -->
+                        <div class="flex flex-col justify-center items-center bg-slate-900/50 rounded-xl p-6 border border-slate-700 text-center relative">
+                            <div class="absolute top-4 left-4 text-slate-500 text-sm">隱含目標價</div>
+                            
+                            <div id="priceOutput" class="text-6xl font-bold highlight-text my-4">2,109</div>
+                            <div class="text-xl text-slate-400 mb-6">TWD</div>
+
+                            <div class="w-full grid grid-cols-3 gap-2 text-xs">
+                                <div class="p-2 bg-red-900/20 rounded text-red-300 border border-red-900/30">
+                                    <div class="font-bold mb-1">保守 (20x)</div>
+                                    <div id="bearPrice">1,622</div>
+                                </div>
+                                <div class="p-2 bg-blue-900/20 rounded text-blue-300 border border-blue-900/30">
+                                    <div class="font-bold mb-1">基準 (25x)</div>
+                                    <div id="basePrice">2,028</div>
+                                </div>
+                                <div class="p-2 bg-purple-900/20 rounded text-purple-300 border border-purple-900/30">
+                                    <div class="font-bold mb-1">樂觀 (30x)</div>
+                                    <div id="bullPrice">2,434</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sensitivity Matrix Table -->
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-white mb-4">2026 估值敏感度矩陣</h3>
+                    <div class="overflow-x-auto rounded-lg border border-slate-700">
+                        <table class="w-full text-sm text-center text-slate-300">
+                            <thead class="bg-slate-800 text-xs text-slate-400 uppercase">
+                                <tr>
+                                    <th class="px-4 py-3 bg-slate-900">PE / EPS</th>
+                                    <th class="px-4 py-3">NT$ 75 (低標)</th>
+                                    <th class="px-4 py-3 bg-blue-900/20 text-blue-300">NT$ 80.21 (基準)</th>
+                                    <th class="px-4 py-3">NT$ 85 (高標)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700">
+                                <tr>
+                                    <td class="px-4 py-3 font-bold bg-slate-800">20x</td>
+                                    <td class="px-4 py-3">1,500</td>
+                                    <td class="px-4 py-3 bg-blue-900/10">1,604</td>
+                                    <td class="px-4 py-3">1,700</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-bold bg-slate-800">25x</td>
+                                    <td class="px-4 py-3">1,875</td>
+                                    <td class="px-4 py-3 bg-blue-900/10 font-bold text-white border-2 border-blue-500 rounded relative">
+                                        2,005
+                                        <span class="absolute -top-2 -right-2 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                                    </td>
+                                    <td class="px-4 py-3">2,125</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-bold bg-slate-800">30x</td>
+                                    <td class="px-4 py-3">2,250</td>
+                                    <td class="px-4 py-3 bg-blue-900/10">2,406</td>
+                                    <td class="px-4 py-3">2,550</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Risks -->
+            <div id="risks" class="content-section hidden space-y-6">
+                <h2 class="text-3xl font-bold text-white mb-4">風險評估與總結</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-red-900/10 border border-red-900/30 p-6 rounded-xl">
+                        <div class="flex items-center gap-3 mb-3">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                            <h3 class="font-bold text-white">地緣政治 (灰犀牛)</h3>
+                        </div>
+                        <p class="text-slate-400 text-sm">台海緊張可能導致本益比壓縮。但隨著美國/日本/德國廠產能釋放，供應鏈韌性增強，此折價有望收窄。</p>
+                    </div>
+                    <div class="bg-orange-900/10 border border-orange-900/30 p-6 rounded-xl">
+                        <div class="flex items-center gap-3 mb-3">
+                            <i class="fas fa-flask text-orange-500 text-xl"></i>
+                            <h3 class="font-bold text-white">技術轉折 (GAA)</h3>
+                        </div>
+                        <p class="text-slate-400 text-sm">2nm 採用 GAA 架構是巨大挑戰。若良率爬坡受阻可能影響毛利。目前數據顯示進展優於 Samsung。</p>
+                    </div>
+                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl">
+                        <div class="flex items-center gap-3 mb-3">
+                            <i class="fas fa-gavel text-slate-400 text-xl"></i>
+                            <h3 class="font-bold text-white">反壟斷監管</h3>
+                        </div>
+                        <p class="text-slate-400 text-sm">作為 AI 唯一供應商可能引發關注。但台積電定位為「夥伴」不與客戶競爭，風險相對可控。</p>
+                    </div>
+                </div>
+
+                <div class="card-gradient p-8 rounded-xl text-center">
+                    <h3 class="text-2xl font-bold text-white mb-4">最終投資建議：Conviction Buy</h3>
+                    <p class="text-slate-300 max-w-2xl mx-auto mb-6">
+                        台積電已完成從「週期股」向「成長股」的華麗轉身。2025-2030 年，只要 AI 是未來十年的生產力核心，台積電就是這個時代的石油與電網。
+                    </p>
+                    <div class="inline-block px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-colors cursor-pointer" onclick="switchTab('dashboard')">
+                        查看儀表板
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- Navigation Logic ---
+        function switchTab(tabId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
+            // Show selected section
+            document.getElementById(tabId).classList.remove('hidden');
+            
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+            const activeLink = document.querySelector(`a[href="#${tabId}"]`);
+            if(activeLink) activeLink.classList.add('active');
+
+            // Scroll to top
+            document.getElementById('contentArea').scrollTop = 0;
+
+            // Close mobile menu if open
+            const mobileMenu = document.getElementById('mobileMenu');
+            if (!mobileMenu.classList.contains('translate-x-full')) {
+                toggleMobileMenu();
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('translate-x-full');
+        }
+
+        function mobileNav(tabId) {
+            switchTab(tabId);
+        }
+
+        // --- Chart.js Configuration ---
+        // Global Chart Defaults
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Noto Sans TC', sans-serif";
+
+        // 1. Growth Chart (Bar + Line)
+        const ctxGrowth = document.getElementById('growthChart').getContext('2d');
+        new Chart(ctxGrowth, {
+            type: 'bar',
+            data: {
+                labels: ['2025(A)', '2026(F)', '2027(F)', '2028(F)', '2029(F)', '2030(F)'],
+                datasets: [
+                    {
+                        label: '預估 EPS (元)',
+                        data: [61.7, 81.1, 98.5, 121.1, 140.8, 163.7],
+                        type: 'line',
+                        borderColor: '#a78bfa',
+                        backgroundColor: '#a78bfa',
+                        borderWidth: 3,
+                        yAxisID: 'y1',
+                        tension: 0.3
+                    },
+                    {
+                        label: '營收 (兆元)',
+                        data: [3.81, 4.95, 5.94, 7.13, 8.20, 9.43],
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        hoverBackgroundColor: 'rgba(59, 130, 246, 1)',
+                        yAxisID: 'y',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#cbd5e1',
+                        borderColor: '#334155',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: '營收 (兆元)' },
+                        grid: { color: '#334155' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'EPS (元)' },
+                        grid: { drawOnChartArea: false }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 2. Mix Chart (Doughnut)
+        const ctxMix = document.getElementById('mixChart').getContext('2d');
+        new Chart(ctxMix, {
+            type: 'doughnut',
+            data: {
+                labels: ['HPC (AI/Data Center)', 'Smartphone', 'IoT', 'Auto', 'Others'],
+                datasets: [{
+                    data: [62, 28, 4, 4, 2],
+                    backgroundColor: [
+                        '#3b82f6', // Blue - HPC
+                        '#22c55e', // Green - Phone
+                        '#eab308', // Yellow
+                        '#f97316', // Orange
+                        '#64748b'  // Grey
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // --- Valuation Calculator Logic ---
+        const epsInput = document.getElementById('epsInput');
+        const peInput = document.getElementById('peInput');
+        const epsDisplay = document.getElementById('epsValueDisplay');
+        const peDisplay = document.getElementById('peValueDisplay');
+        const priceOutput = document.getElementById('priceOutput');
+        
+        // Scenario outputs
+        const bearPrice = document.getElementById('bearPrice');
+        const basePrice = document.getElementById('basePrice');
+        const bullPrice = document.getElementById('bullPrice');
+
+        function updateValuation() {
+            const eps = parseFloat(epsInput.value);
+            const pe = parseFloat(peInput.value);
+            
+            // Update Displays
+            epsDisplay.innerText = eps.toFixed(2);
+            peDisplay.innerText = pe.toFixed(1);
+
+            // Calculate Main Price
+            const price = Math.round(eps * pe);
+            
+            // Animate Price Change (Simple)
+            priceOutput.innerText = price.toLocaleString();
+
+            // Calculate Scenarios based on current EPS input
+            bearPrice.innerText = Math.round(eps * 20).toLocaleString();
+            basePrice.innerText = Math.round(eps * 25).toLocaleString();
+            bullPrice.innerText = Math.round(eps * 30).toLocaleString();
+        }
+
+        // Event Listeners
+        epsInput.addEventListener('input', updateValuation);
+        peInput.addEventListener('input', updateValuation);
+
+        // Initialize
+        updateValuation();
+
+    </script>
+</body>
+</html>
