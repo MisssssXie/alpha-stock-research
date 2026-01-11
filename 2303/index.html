@@ -83,13 +83,22 @@
                     </div>
                     <div>
                         <h1 class="text-lg font-bold text-slate-900 leading-tight">聯華電子 (2303.TW)</h1>
-                        <p class="text-xs text-slate-500">深度財務穿透報告 | 2026 前瞻</p>
+                        <p class="text-xs text-slate-500">深度財務穿透報告 | 2026/1/10 前瞻</p>
+                        
                     </div>
                 </div>
                 <div class="text-right">
                     <div class="text-xs text-slate-500">報告基準價</div>
                     <div class="font-mono font-bold text-slate-800 text-lg">54.10 <span class="text-xs font-normal text-slate-400">TWD</span></div>
                 </div>
+                
+                <!-- [MOCK] PDF 下載按鈕區域 -->
+                <button onclick="openPdfReport()" class="mt-3 group flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-3 py-1.5 rounded text-xs transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-400 group-hover:text-red-300"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+                    觀看完整研究報告 (PDF)
+                </button>
+                <!-- [MOCK] 結束 -->
+                
             </div>
         </div>
     </nav>
@@ -573,6 +582,24 @@
             // Initial run
             updateModel();
         });
+        
+        // --- [MOCK] PDF 開啟邏輯 ---
+        function openPdfReport() {
+            // TODO: 請在此處替換為您真實的 PDF 檔案路徑或 URL
+            // 例如: const realPdfUrl = './assets/3374_analysis_2026.pdf';
+            // 或者: const realPdfUrl = 'https://your-domain.com/reports/3374.pdf';
+            
+            // 這裡使用一個網路上公開的 Dummy PDF 作為示範
+            const mockPdfUrl = './3374_2026_report.pdf';
+            // 開啟新分頁
+            window.open(mockPdfUrl, '_blank');
+
+            // (選用) 如果希望直接觸發下載而非預覽，可以使用以下方式 (需同源或伺服器支援):
+            // const link = document.createElement('a');
+            // link.href = mockPdfUrl;
+            // link.download = '3374_Research_Report.pdf';
+            // link.click();
+        }
 
     </script>
 </body>
