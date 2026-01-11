@@ -1,409 +1,558 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, ComposedChart, ReferenceLine, AreaChart, Area
-} from 'recharts';
-import { 
-  TrendingUp, TrendingDown, AlertTriangle, Target, DollarSign, Activity, FileText, ChevronDown, ChevronUp, BarChart2, Shield, Cpu
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3374 精材 - 高階 AI 投資估值儀表板</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#151f32',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #020617; color: #e2e8f0; }
+        .tab-btn.active { background-color: rgba(37, 99, 235, 0.2); color: #60a5fa; border-color: rgba(37, 99, 235, 0.3); }
+        .scenario-btn.active { background-color: #1e293b; color: white; border: 1px solid #334155; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        /* Scrollbar styles */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="min-h-screen selection:bg-blue-500 selection:text-white font-sans">
 
-// --- Data Source Based on Report ---
-
-const SCENARIOS = {
-  conservative: {
-    label: "保守 (Bear)",
-    description: "全球經濟衰退 / 手機需求疲軟，新廠利用率僅 70%",
-    pe: 24,
-    netMargin: "16.0%",
-    data: [
-      { year: '2026F', revenue: 78.5, eps: 4.63, profit: 12.56 },
-      { year: '2027F', revenue: 82.4, eps: 5.01, profit: 13.60 },
-      { year: '2028F', revenue: 86.5, eps: 5.26, profit: 14.27 },
-    ]
-  },
-  base: {
-    label: "合理 (Base)",
-    description: "CIS需求回溫，新廠利用率 85-90%，運營槓桿顯現",
-    pe: 32,
-    netMargin: "20.0%",
-    data: [
-      { year: '2026F', revenue: 88.3, eps: 6.51, profit: 17.66 },
-      { year: '2027F', revenue: 101.5, eps: 7.85, profit: 21.32 },
-      { year: '2028F', revenue: 113.7, eps: 9.01, profit: 24.45 },
-    ]
-  },
-  optimistic: {
-    label: "樂觀 (Bull)",
-    description: "AI邊緣裝置爆發 / 3D封裝放量，淨利率挑戰歷史新高",
-    pe: 38,
-    netMargin: "23.0%",
-    data: [
-      { year: '2026F', revenue: 98.1, eps: 8.31, profit: 22.56 },
-      { year: '2027F', revenue: 117.7, eps: 10.63, profit: 28.84 },
-      { year: '2028F', revenue: 141.2, eps: 13.01, profit: 35.30 },
-    ]
-  }
-};
-
-const REVENUE_CHECKLIST = [
-  { month: '1月', weight: '7.0%', target: 618, note: '傳統淡季，觀察6億大關' },
-  { month: '2月', weight: '6.5%', target: 574, note: '農曆年因素，容許回落' },
-  { month: '3月', weight: '8.5%', target: 750, note: '關鍵月份！確認Q1淡季不淡', highlight: true },
-  { month: '4月', weight: '7.5%', target: 662, note: 'Q2開始，觀察新廠貢獻' },
-  { month: '5月', weight: '8.0%', target: 706, note: '' },
-  { month: '6月', weight: '8.5%', target: 750, note: '季底拉貨效應' },
-  { month: '7月', weight: '9.0%', target: 795, note: '進入旺季，蘋果備貨' },
-  { month: '8月', weight: '9.5%', target: 839, note: '' },
-  { month: '9月', weight: '10.5%', target: 927, note: '營收高峰，挑戰10億', highlight: true },
-  { month: '10月', weight: '10.0%', target: 883, note: '延續旺季動能' },
-  { month: '11月', weight: '8.5%', target: 750, note: '季節性修正' },
-  { month: '12月', weight: '6.5%', target: 574, note: '年底庫存盤點' },
-];
-
-const FUNDAMENTALS = [
-  { label: "股本", value: "27.14 億元", sub: "假設未來三年無稀釋" },
-  { label: "近四季平均淨利率", value: "18.09%", sub: "模型基準參考" },
-  { label: "極限 EPS 產能", value: "14.44 元", sub: "若產能利用率 100% + 淨利 28%" },
-  { label: "目前本益比", value: "~35x", sub: "處於歷史區間上緣" },
-];
-
-export default function InvestmentDashboard() {
-  const [activeTab, setActiveTab] = useState('model');
-  const [scenario, setScenario] = useState('base');
-  const [showRisks, setShowRisks] = useState(false);
-
-  const currentScenario = SCENARIOS[scenario];
-  const targetPrice = (currentScenario.data[0].eps * currentScenario.pe).toFixed(0);
-  
-  // Chart Custom Tooltip
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-slate-800 border border-slate-700 p-3 rounded shadow-lg text-sm">
-          <p className="font-bold text-slate-200">{label}</p>
-          <p className="text-blue-400">營收: {payload[0].value} 億</p>
-          <p className="text-green-400">EPS: {payload[1].value} 元</p>
-          <p className="text-slate-400 text-xs mt-1">
-             隱含淨利: {payload[0].payload.profit} 億
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-blue-500 selection:text-white">
-      {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-white tracking-tight">3374 精材科技</h1>
-              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-600 text-white">3374.TWO</span>
-            </div>
-            <p className="text-slate-400 text-sm mt-1">高階 AI 投資研究預測系統 v2.0</p>
-          </div>
-          <div className="flex items-end flex-col">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-400">評級</span>
-              <span className="font-bold text-green-400 bg-green-400/10 px-3 py-1 rounded">買進 (Accumulate)</span>
-            </div>
-            <div className="text-xs text-slate-500 mt-1">報告日期: 2026/01/11</div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Left Sidebar / Navigation */}
-        <aside className="lg:col-span-3 space-y-6">
-          {/* Quick Stats */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-            <h3 className="text-slate-400 text-xs font-semibold uppercase tracking-wider">核心評價 (2026F)</h3>
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div>
-              <div className="text-sm text-slate-500 mb-1">目標價 (Target Price)</div>
-              <div className="text-4xl font-bold text-white tracking-tighter">
-                NT$ {targetPrice}
-              </div>
-              <div className="text-xs text-blue-400 mt-1">
-                基於 {currentScenario.label} 情境
-              </div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-white tracking-tight">3374 精材科技</h1>
+                    <span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-600 text-white">3374.TWO</span>
+                </div>
+                <p class="text-slate-400 text-sm mt-1">高階 AI 投資研究預測系統 v2.0</p>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
-              <div>
-                <div className="text-xs text-slate-500">預估 EPS</div>
-                <div className="text-xl font-semibold text-white">{currentScenario.data[0].eps}</div>
-              </div>
-              <div>
-                <div className="text-xs text-slate-500">給予 P/E</div>
-                <div className="text-xl font-semibold text-white">{currentScenario.pe}x</div>
-              </div>
+            <div class="flex flex-col items-end">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-slate-400">評級</span>
+                    <span class="font-bold text-green-400 bg-green-400/10 px-3 py-1 rounded border border-green-400/20">買進 (Accumulate)</span>
+                </div>
+                <div class="text-xs text-slate-500 mt-1">報告日期: 2026/01/11</div>
             </div>
-          </div>
+        </div>
+    </header>
 
-          {/* Navigation Buttons */}
-          <nav className="space-y-1">
-            <button 
-              onClick={() => setActiveTab('model')}
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${activeTab === 'model' ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30' : 'hover:bg-slate-800 text-slate-400'}`}
-            >
-              <Activity size={18} />
-              財務預測模型
-            </button>
-            <button 
-              onClick={() => setActiveTab('revenue')}
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${activeTab === 'revenue' ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30' : 'hover:bg-slate-800 text-slate-400'}`}
-            >
-              <Target size={18} />
-              營收達標監控
-            </button>
-             <button 
-              onClick={() => setActiveTab('thesis')}
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${activeTab === 'thesis' ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30' : 'hover:bg-slate-800 text-slate-400'}`}
-            >
-              <FileText size={18} />
-              投資邏輯與風險
-            </button>
-          </nav>
-
-          {/* Fundamental Data Widget */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-             <h3 className="text-slate-400 text-xs font-semibold uppercase mb-3">基礎參數</h3>
-             <div className="space-y-3">
-               {FUNDAMENTALS.map((item, idx) => (
-                 <div key={idx} className="flex justify-between items-start">
-                   <div className="text-sm text-slate-500">{item.label}</div>
-                   <div className="text-right">
-                     <div className="text-sm text-slate-200 font-medium">{item.value}</div>
-                     <div className="text-[10px] text-slate-600">{item.sub}</div>
-                   </div>
-                 </div>
-               ))}
-             </div>
-          </div>
-        </aside>
-
-        {/* Main Content Area */}
-        <section className="lg:col-span-9 space-y-6">
-          
-          {/* Tab: Financial Model */}
-          {activeTab === 'model' && (
-            <div className="space-y-6">
-              {/* Scenario Toggles */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-1 grid grid-cols-3 gap-1">
-                {Object.keys(SCENARIOS).map((key) => (
-                  <button
-                    key={key}
-                    onClick={() => setScenario(key)}
-                    className={`py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                      scenario === key 
-                        ? 'bg-slate-800 text-white shadow-sm ring-1 ring-slate-700' 
-                        : 'text-slate-500 hover:text-slate-300'
-                    }`}
-                  >
-                    {SCENARIOS[key].label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Scenario Description */}
-              <div className="bg-blue-900/10 border border-blue-800/30 rounded-lg p-4 flex items-start gap-3">
-                <Activity className="text-blue-400 mt-1 flex-shrink-0" size={18} />
+    <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Sidebar -->
+        <aside class="lg:col-span-3 space-y-6">
+            <!-- Quick Stats -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4 shadow-lg">
+                <h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider">核心評價 (2026F)</h3>
                 <div>
-                  <h4 className="text-blue-400 font-semibold text-sm">情境假設核心：</h4>
-                  <p className="text-slate-300 text-sm mt-1">{currentScenario.description}</p>
-                  <p className="text-slate-400 text-xs mt-2">
-                    假設淨利率: <span className="text-slate-200">{currentScenario.netMargin}</span> | 
-                    給予本益比: <span className="text-slate-200">{currentScenario.pe}x</span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Main Chart */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-white mb-6">2026-2028 財務預測趨勢 (EPS vs 營收)</h3>
-                <div className="h-[350px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={currentScenario.data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                      <XAxis dataKey="year" stroke="#94a3b8" tick={{fontSize: 12}} />
-                      <YAxis yAxisId="left" stroke="#94a3b8" label={{ value: '營收 (億)', angle: -90, position: 'insideLeft', fill: '#94a3b8' }} tick={{fontSize: 12}} />
-                      <YAxis yAxisId="right" orientation="right" stroke="#60a5fa" label={{ value: 'EPS (元)', angle: 90, position: 'insideRight', fill: '#60a5fa' }} tick={{fontSize: 12}} />
-                      <RechartsTooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
-                      <Legend />
-                      <Bar yAxisId="left" dataKey="revenue" name="預估營收" fill="#3b82f6" barSize={40} radius={[4, 4, 0, 0]} />
-                      <Line yAxisId="right" type="monotone" dataKey="eps" name="預估 EPS" stroke="#4ade80" strokeWidth={3} dot={{r: 5, fill: '#1e293b', strokeWidth: 2}} activeDot={{r: 7}} />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Data Table */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-800 text-slate-400 uppercase font-semibold">
-                    <tr>
-                      <th className="px-6 py-3">年度</th>
-                      <th className="px-6 py-3 text-right">預估營收 (億)</th>
-                      <th className="px-6 py-3 text-right">預估淨利 (億)</th>
-                      <th className="px-6 py-3 text-right text-blue-400">預估 EPS (元)</th>
-                      <th className="px-6 py-3 text-right">隱含股價 (@{currentScenario.pe}x)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {currentScenario.data.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-slate-800/50 transition-colors">
-                        <td className="px-6 py-4 font-medium text-white">{row.year}</td>
-                        <td className="px-6 py-4 text-right text-slate-300">{row.revenue.toFixed(1)}</td>
-                        <td className="px-6 py-4 text-right text-slate-300">{row.profit.toFixed(2)}</td>
-                        <td className="px-6 py-4 text-right font-bold text-blue-400">{row.eps.toFixed(2)}</td>
-                        <td className="px-6 py-4 text-right font-bold text-green-400">
-                          {(row.eps * currentScenario.pe).toFixed(0)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Tab: Revenue Monitor */}
-          {activeTab === 'revenue' && (
-            <div className="space-y-6">
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                <div className="flex justify-between items-end mb-6">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">2026年 營收達標檢查表</h3>
-                    <p className="text-slate-400 text-sm mt-1">
-                      年度目標: <span className="text-white font-semibold">88.3 億元</span> (合理情境 EPS 6.51)
-                    </p>
-                  </div>
-                  <div className="text-right text-xs text-slate-500">
-                    * 基於季節性權重反推
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-                     <h4 className="text-sm font-semibold text-slate-300 mb-2">Q1 關鍵門檻</h4>
-                     <div className="flex justify-between items-center">
-                        <span className="text-2xl font-bold text-white">19.42 億</span>
-                        <span className="text-xs px-2 py-1 bg-red-500/20 text-red-400 rounded border border-red-500/30">低於 18億 減碼</span>
-                     </div>
-                     <div className="w-full bg-slate-700 h-1.5 rounded-full mt-3 overflow-hidden">
-                       <div className="bg-blue-500 h-full w-[22%]"></div>
-                     </div>
-                     <div className="text-xs text-slate-500 mt-1 text-right">佔全年 22%</div>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-                     <h4 className="text-sm font-semibold text-slate-300 mb-2">Q3 旺季目標</h4>
-                     <div className="flex justify-between items-center">
-                        <span className="text-2xl font-bold text-white">25.61 億</span>
-                        <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded border border-green-500/30">單月破 10億 樂觀</span>
-                     </div>
-                     <div className="w-full bg-slate-700 h-1.5 rounded-full mt-3 overflow-hidden">
-                       <div className="bg-green-500 h-full w-[29%]"></div>
-                     </div>
-                     <div className="text-xs text-slate-500 mt-1 text-right">佔全年 29%</div>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-slate-400 border-b border-slate-700">
-                        <th className="px-4 py-3 text-left">月份</th>
-                        <th className="px-4 py-3 text-center">季節性權重</th>
-                        <th className="px-4 py-3 text-right">應達成營收 (百萬)</th>
-                        <th className="px-4 py-3 text-left pl-8">觀察重點與操作信號</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800">
-                      {REVENUE_CHECKLIST.map((item, idx) => (
-                        <tr key={idx} className={`group ${item.highlight ? 'bg-blue-900/10' : ''}`}>
-                          <td className="px-4 py-3 font-medium text-slate-200">{item.month}</td>
-                          <td className="px-4 py-3 text-center text-slate-500">{item.weight}</td>
-                          <td className="px-4 py-3 text-right font-mono font-bold text-blue-400">{item.target}</td>
-                          <td className="px-4 py-3 pl-8 text-slate-400">
-                            {item.highlight && <AlertTriangle className="inline-block w-3 h-3 text-yellow-500 mr-2" />}
-                            {item.note}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tab: Thesis & Risks */}
-          {activeTab === 'thesis' && (
-            <div className="space-y-6">
-              
-              {/* Moat */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Shield className="text-blue-500" />
-                  <h3 className="text-lg font-bold text-white">結構性成長護城河</h3>
-                </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="bg-slate-800/50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-blue-300 mb-2">3D 堆疊與異質整合</h4>
-                    <p className="text-sm text-slate-400 leading-relaxed">
-                      作為台積電 WoW (Wafer on Wafer) 等中階 3D 封裝的首選外溢夥伴。2027-2028 年估值重評價的核心故事。
-                    </p>
-                  </div>
-                  <div className="bg-slate-800/50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-blue-300 mb-2">12吋 CSP 規模經濟</h4>
-                    <p className="text-sm text-slate-400 leading-relaxed">
-                      從 8 吋轉向 12 吋，初期折舊高，但長期單位成本顯著下降。一旦產能利用率突破損益點，獲利將呈非線性爆發。
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Risks Accordion Style */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                 <div className="flex items-center gap-3 mb-4">
-                  <TrendingDown className="text-red-500" />
-                  <h3 className="text-lg font-bold text-white">風險評估與壓力測試</h3>
+                    <div class="text-sm text-slate-500 mb-1">目標價 (Target Price)</div>
+                    <div class="text-4xl font-bold text-white tracking-tighter" id="target-price-display">
+                        NT$ --
+                    </div>
+                    <div class="text-xs text-blue-400 mt-1" id="scenario-label-display">
+                        --
+                    </div>
                 </div>
                 
-                <div className="space-y-4">
-                   <div className="border-l-4 border-red-500/50 pl-4">
-                     <h4 className="font-semibold text-slate-200">客戶過度集中風險 (Concentration Risk)</h4>
-                     <p className="text-sm text-slate-400 mt-1">
-                       命運與台積電/Apple 高度綁定。若毛利率因砍價下降 5% (至 22%)，EPS 將驟降至 4.5 元。
-                     </p>
-                   </div>
-                   <div className="border-l-4 border-orange-500/50 pl-4">
-                     <h4 className="font-semibold text-slate-200">技術替代風險 (Obsolescence Risk)</h4>
-                     <p className="text-sm text-slate-400 mt-1">
-                       Fan-Out 技術演進可能侵蝕傳統 WLCSP 市場。需持續投入 R&D 維持技術壁壘。
-                     </p>
-                   </div>
-                   <div className="border-l-4 border-yellow-500/50 pl-4">
-                     <h4 className="font-semibold text-slate-200">地緣政治風險</h4>
-                     <p className="text-sm text-slate-400 mt-1">
-                       美中科技戰可能影響非美系 CIS 客戶訂單。
-                     </p>
-                   </div>
+                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
+                    <div>
+                        <div class="text-xs text-slate-500">預估 EPS</div>
+                        <div class="text-xl font-semibold text-white" id="eps-display">--</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500">給予 P/E</div>
+                        <div class="text-xl font-semibold text-white" id="pe-display">--</div>
+                    </div>
                 </div>
-              </div>
             </div>
-          )}
 
+            <!-- Navigation -->
+            <nav class="space-y-1">
+                <button onclick="switchTab('model')" id="btn-model" class="tab-btn active w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-slate-800 text-slate-400 border border-transparent">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    財務預測模型
+                </button>
+                <button onclick="switchTab('revenue')" id="btn-revenue" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-slate-800 text-slate-400 border border-transparent">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                    營收達標監控
+                </button>
+                <button onclick="switchTab('thesis')" id="btn-thesis" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-slate-800 text-slate-400 border border-transparent">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                    投資邏輯與風險
+                </button>
+            </nav>
+
+            <!-- Fundamentals -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                <h3 class="text-slate-400 text-xs font-semibold uppercase mb-3">基礎參數</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div class="text-sm text-slate-500">股本</div>
+                        <div class="text-right">
+                            <div class="text-sm text-slate-200 font-medium">27.14 億元</div>
+                            <div class="text-[10px] text-slate-600">假設未來三年無稀釋</div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div class="text-sm text-slate-500">平均淨利率</div>
+                        <div class="text-right">
+                            <div class="text-sm text-slate-200 font-medium">18.09%</div>
+                            <div class="text-[10px] text-slate-600">近四季平均</div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div class="text-sm text-slate-500">極限 EPS 產能</div>
+                        <div class="text-right">
+                            <div class="text-sm text-slate-200 font-medium">14.44 元</div>
+                            <div class="text-[10px] text-slate-600">假設全產能+淨利28%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <section class="lg:col-span-9 space-y-6">
+            
+            <!-- MODEL TAB -->
+            <div id="tab-model" class="fade-in space-y-6">
+                <!-- Scenarios -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-1 grid grid-cols-3 gap-1">
+                    <button onclick="setScenario('conservative')" id="scen-conservative" class="scenario-btn py-2 px-4 rounded-lg text-sm font-medium text-slate-500 transition-all hover:text-slate-300">保守 (Bear)</button>
+                    <button onclick="setScenario('base')" id="scen-base" class="scenario-btn active py-2 px-4 rounded-lg text-sm font-medium text-slate-500 transition-all hover:text-slate-300">合理 (Base)</button>
+                    <button onclick="setScenario('optimistic')" id="scen-optimistic" class="scenario-btn py-2 px-4 rounded-lg text-sm font-medium text-slate-500 transition-all hover:text-slate-300">樂觀 (Bull)</button>
+                </div>
+
+                <!-- Scenario Description -->
+                <div class="bg-blue-900/10 border border-blue-800/30 rounded-lg p-4 flex items-start gap-3">
+                    <svg class="text-blue-400 mt-1 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <div>
+                        <h4 class="text-blue-400 font-semibold text-sm">情境假設核心：</h4>
+                        <p class="text-slate-300 text-sm mt-1" id="scenario-desc">--</p>
+                        <p class="text-slate-400 text-xs mt-2" id="scenario-params">--</p>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-6">2026-2028 財務預測趨勢</h3>
+                    <div class="relative h-[350px] w-full">
+                        <canvas id="financialChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-800 text-slate-400 uppercase font-semibold">
+                                <tr>
+                                    <th class="px-6 py-3">年度</th>
+                                    <th class="px-6 py-3 text-right">預估營收 (億)</th>
+                                    <th class="px-6 py-3 text-right">預估淨利 (億)</th>
+                                    <th class="px-6 py-3 text-right text-blue-400">預估 EPS (元)</th>
+                                    <th class="px-6 py-3 text-right">隱含股價</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800" id="data-table-body">
+                                <!-- Data injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REVENUE TAB -->
+            <div id="tab-revenue" class="hidden fade-in space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">2026年 營收達標檢查表</h3>
+                            <p class="text-slate-400 text-sm mt-1">
+                                年度目標: <span class="text-white font-semibold">88.3 億元</span> (合理情境 EPS 6.51)
+                            </p>
+                        </div>
+                        <div class="text-right text-xs text-slate-500">
+                            * 基於季節性權重反推
+                        </div>
+                    </div>
+
+                    <!-- Progress Bars -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                            <h4 class="text-sm font-semibold text-slate-300 mb-2">Q1 關鍵門檻</h4>
+                            <div class="flex justify-between items-center">
+                                <span class="text-2xl font-bold text-white">19.42 億</span>
+                                <span class="text-xs px-2 py-1 bg-red-500/20 text-red-400 rounded border border-red-500/30">低於 18億 減碼</span>
+                            </div>
+                            <div class="w-full bg-slate-700 h-1.5 rounded-full mt-3 overflow-hidden">
+                                <div class="bg-blue-500 h-full w-[22%]"></div>
+                            </div>
+                            <div class="text-xs text-slate-500 mt-1 text-right">佔全年 22%</div>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                            <h4 class="text-sm font-semibold text-slate-300 mb-2">Q3 旺季目標</h4>
+                            <div class="flex justify-between items-center">
+                                <span class="text-2xl font-bold text-white">25.61 億</span>
+                                <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded border border-green-500/30">單月破 10億 樂觀</span>
+                            </div>
+                            <div class="w-full bg-slate-700 h-1.5 rounded-full mt-3 overflow-hidden">
+                                <div class="bg-green-500 h-full w-[29%]"></div>
+                            </div>
+                            <div class="text-xs text-slate-500 mt-1 text-right">佔全年 29%</div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-slate-700">
+                                    <th class="px-4 py-3 text-left">月份</th>
+                                    <th class="px-4 py-3 text-center">權重</th>
+                                    <th class="px-4 py-3 text-right">目標 (百萬)</th>
+                                    <th class="px-4 py-3 text-left pl-8">觀察重點</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800" id="revenue-table-body">
+                                <!-- JS Injected -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THESIS TAB -->
+            <div id="tab-thesis" class="hidden fade-in space-y-6">
+                <!-- Moat -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg class="text-blue-500" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <h3 class="text-lg font-bold text-white">結構性成長護城河</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
+                            <h4 class="font-semibold text-blue-300 mb-2">3D 堆疊與異質整合</h4>
+                            <p class="text-sm text-slate-400 leading-relaxed">
+                                作為台積電 WoW (Wafer on Wafer) 等中階 3D 封裝的首選外溢夥伴。2027-2028 年估值重評價的核心故事。
+                            </p>
+                        </div>
+                        <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
+                            <h4 class="font-semibold text-blue-300 mb-2">12吋 CSP 規模經濟</h4>
+                            <p class="text-sm text-slate-400 leading-relaxed">
+                                從 8 吋轉向 12 吋，初期折舊高，但長期單位成本顯著下降。一旦產能利用率突破損益點，獲利將呈非線性爆發。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risks -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg class="text-red-500" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+                        <h3 class="text-lg font-bold text-white">風險評估與壓力測試</h3>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-red-500/50 pl-4 py-1">
+                            <h4 class="font-semibold text-slate-200">客戶過度集中風險</h4>
+                            <p class="text-sm text-slate-400 mt-1">
+                                命運與台積電/Apple 高度綁定。若毛利率因砍價下降 5% (至 22%)，EPS 將驟降至 4.5 元。
+                            </p>
+                        </div>
+                        <div class="border-l-4 border-orange-500/50 pl-4 py-1">
+                            <h4 class="font-semibold text-slate-200">技術替代風險</h4>
+                            <p class="text-sm text-slate-400 mt-1">
+                                Fan-Out 技術演進可能侵蝕傳統 WLCSP 市場。需持續投入 R&D 維持技術壁壘。
+                            </p>
+                        </div>
+                        <div class="border-l-4 border-yellow-500/50 pl-4 py-1">
+                            <h4 class="font-semibold text-slate-200">地緣政治風險</h4>
+                            <p class="text-sm text-slate-400 mt-1">
+                                美中科技戰可能影響非美系 CIS 客戶訂單。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
-      </main>
-      
-      {/* Disclaimer Footer */}
-      <footer className="max-w-7xl mx-auto px-4 py-8 text-center text-slate-600 text-xs border-t border-slate-900 mt-8">
+    </main>
+
+    <footer class="max-w-7xl mx-auto px-4 py-8 text-center text-slate-600 text-xs border-t border-slate-900 mt-8">
         <p>免責聲明：本儀表板基於人工智慧分析與公開資訊整理，僅供專業投資研究參考，不構成任何形式之投資建議。</p>
-        <p className="mt-2">財務模型假設：折舊 5-7 年直線法，稅率 20%，股本 2.714 億股恆定。</p>
-      </footer>
-    </div>
-  );
-}
+        <p class="mt-2">財務模型假設：折舊 5-7 年直線法，稅率 20%，股本 2.714 億股恆定。</p>
+    </footer>
+
+    <!-- LOGIC -->
+    <script>
+        // --- Data ---
+        const SCENARIOS = {
+            conservative: {
+                label: "保守 (Bear)",
+                description: "全球經濟衰退 / 手機需求疲軟，新廠利用率僅 70%",
+                pe: 24,
+                netMargin: "16.0%",
+                data: [
+                    { year: '2026F', revenue: 78.5, eps: 4.63, profit: 12.56 },
+                    { year: '2027F', revenue: 82.4, eps: 5.01, profit: 13.60 },
+                    { year: '2028F', revenue: 86.5, eps: 5.26, profit: 14.27 },
+                ]
+            },
+            base: {
+                label: "合理 (Base)",
+                description: "CIS需求回溫，新廠利用率 85-90%，運營槓桿顯現",
+                pe: 32,
+                netMargin: "20.0%",
+                data: [
+                    { year: '2026F', revenue: 88.3, eps: 6.51, profit: 17.66 },
+                    { year: '2027F', revenue: 101.5, eps: 7.85, profit: 21.32 },
+                    { year: '2028F', revenue: 113.7, eps: 9.01, profit: 24.45 },
+                ]
+            },
+            optimistic: {
+                label: "樂觀 (Bull)",
+                description: "AI邊緣裝置爆發 / 3D封裝放量，淨利率挑戰歷史新高",
+                pe: 38,
+                netMargin: "23.0%",
+                data: [
+                    { year: '2026F', revenue: 98.1, eps: 8.31, profit: 22.56 },
+                    { year: '2027F', revenue: 117.7, eps: 10.63, profit: 28.84 },
+                    { year: '2028F', revenue: 141.2, eps: 13.01, profit: 35.30 },
+                ]
+            }
+        };
+
+        const REVENUE_CHECKLIST = [
+            { month: '1月', weight: '7.0%', target: 618, note: '傳統淡季，觀察6億大關', highlight: false },
+            { month: '2月', weight: '6.5%', target: 574, note: '農曆年因素，容許回落', highlight: false },
+            { month: '3月', weight: '8.5%', target: 750, note: '關鍵月份！確認Q1淡季不淡', highlight: true },
+            { month: '4月', weight: '7.5%', target: 662, note: 'Q2開始，觀察新廠貢獻', highlight: false },
+            { month: '5月', weight: '8.0%', target: 706, note: '', highlight: false },
+            { month: '6月', weight: '8.5%', target: 750, note: '季底拉貨效應', highlight: false },
+            { month: '7月', weight: '9.0%', target: 795, note: '進入旺季，蘋果備貨', highlight: false },
+            { month: '8月', weight: '9.5%', target: 839, note: '', highlight: false },
+            { month: '9月', weight: '10.5%', target: 927, note: '營收高峰，挑戰10億', highlight: true },
+            { month: '10月', weight: '10.0%', target: 883, note: '延續旺季動能', highlight: false },
+            { month: '11月', weight: '8.5%', target: 750, note: '季節性修正', highlight: false },
+            { month: '12月', weight: '6.5%', target: 574, note: '年底庫存盤點', highlight: false },
+        ];
+
+        let currentScenario = 'base';
+        let chartInstance = null;
+
+        // --- Functions ---
+
+        function init() {
+            renderRevenueTable();
+            updateScenarioUI();
+            
+            // Tab Buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Handled by inline onclick for simplicity in this demo
+                });
+            });
+        }
+
+        function switchTab(tabId) {
+            // Hide all
+            ['model', 'revenue', 'thesis'].forEach(id => {
+                document.getElementById(`tab-${id}`).classList.add('hidden');
+                document.getElementById(`btn-${id}`).classList.remove('active');
+            });
+            // Show target
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`btn-${tabId}`).classList.add('active');
+        }
+
+        function setScenario(key) {
+            currentScenario = key;
+            updateScenarioUI();
+        }
+
+        function updateScenarioUI() {
+            const data = SCENARIOS[currentScenario];
+            
+            // Update Stats
+            const targetPrice = (data.data[0].eps * data.pe).toFixed(0);
+            document.getElementById('target-price-display').innerText = `NT$ ${targetPrice}`;
+            document.getElementById('scenario-label-display').innerText = `基於 ${data.label} 情境`;
+            document.getElementById('eps-display').innerText = data.data[0].eps;
+            document.getElementById('pe-display').innerText = `${data.pe}x`;
+
+            // Update Descriptions
+            document.getElementById('scenario-desc').innerText = data.description;
+            document.getElementById('scenario-params').innerHTML = 
+                `假設淨利率: <span class="text-slate-200">${data.netMargin}</span> | 給予本益比: <span class="text-slate-200">${data.pe}x</span>`;
+
+            // Update Buttons State
+            document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`scen-${currentScenario}`).classList.add('active');
+
+            // Update Table
+            const tbody = document.getElementById('data-table-body');
+            tbody.innerHTML = '';
+            data.data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/50 transition-colors border-b border-slate-800 last:border-0';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-white">${row.year}</td>
+                    <td class="px-6 py-4 text-right text-slate-300">${row.revenue.toFixed(1)}</td>
+                    <td class="px-6 py-4 text-right text-slate-300">${row.profit.toFixed(2)}</td>
+                    <td class="px-6 py-4 text-right font-bold text-blue-400">${row.eps.toFixed(2)}</td>
+                    <td class="px-6 py-4 text-right font-bold text-green-400">${(row.eps * data.pe).toFixed(0)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update Chart
+            renderChart(data.data);
+        }
+
+        function renderRevenueTable() {
+            const tbody = document.getElementById('revenue-table-body');
+            REVENUE_CHECKLIST.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = item.highlight ? 'bg-blue-900/10' : '';
+                const icon = item.highlight ? `<svg class="inline-block w-3 h-3 text-yellow-500 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>` : '';
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-slate-200">${item.month}</td>
+                    <td class="px-4 py-3 text-center text-slate-500">${item.weight}</td>
+                    <td class="px-4 py-3 text-right font-mono font-bold text-blue-400">${item.target}</td>
+                    <td class="px-4 py-3 pl-8 text-slate-400">${icon}${item.note}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('financialChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const years = data.map(d => d.year);
+            const revenues = data.map(d => d.revenue);
+            const eps = data.map(d => d.eps);
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: '預估 EPS (元)',
+                            data: eps,
+                            type: 'line',
+                            borderColor: '#4ade80',
+                            backgroundColor: '#4ade80',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#1e293b',
+                            pointBorderColor: '#4ade80',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            yAxisID: 'y1',
+                            tension: 0.3
+                        },
+                        {
+                            label: '預估營收 (億)',
+                            data: revenues,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4,
+                            barPercentage: 0.5,
+                            yAxisID: 'y',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#cbd5e1' }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#e2e8f0',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#334155', drawBorder: false },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: { color: '#334155', drawBorder: false },
+                            ticks: { color: '#94a3b8' },
+                            title: { display: true, text: '營收 (億)', color: '#64748b' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: '#60a5fa' },
+                            title: { display: true, text: 'EPS (元)', color: '#60a5fa' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Run
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
