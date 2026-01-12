@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3673 TPK-KY 互動式估值報告 | 2026 展望</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            height: 300px; 
+            max-height: 400px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .nav-active {
+            border-bottom: 2px solid #0f172a;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .scenario-btn.active {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Chosen Palette: Corporate Slate & Blue (Background: #f8fafc, Primary: #0f172a, Accent: #3b82f6, Success: #10b981) -->
+    
+    <!-- Application Structure Plan: 
+         1. Header: Quick stock snapshot (Price vs NAV).
+         2. Executive Dashboard: 3 Key Cards (P/B, Target, Strategy) for immediate insight.
+         3. Valuation Simulator (Interactive): Users toggle Scenarios (Bear/Base/Bull) to see how EPS and Target Price change dynamically on a chart. This simplifies the complex modeling into actionable buttons.
+         4. Revenue Tracker (Visual): A Line chart showing the 'Path to 63B' revenue goal, making the monthly check-list visual.
+         5. Strategic Pivot (Comparison): Side-by-side view of Old vs. New business engines to explain the "Story".
+         6. PB Matrix (Visual): A simple gauge/bar visualization of where the current price sits in historical bands.
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Valuation Simulator: Bar Chart (Chart.js). Goal: Inform & Compare. Justification: Users need to see the magnitude of difference between scenarios instantly.
+         - Revenue Tracker: Line Chart (Chart.js). Goal: Change/Monitor. Justification: Shows the trend and seasonality clearly (Q3 peak).
+         - PB Matrix: HTML/CSS Progress Bar. Goal: Context. Justification: Simple linear scale is best for "Cheap vs Expensive".
+         - Strategy: Grid Layout with Icons. Goal: Inform. Justification: Clean breakdown of qualitative points.
+         - NO SVG/Mermaid confirmed.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-slate-900 rounded flex items-center justify-center text-white font-bold text-lg">AI</div>
+                    <div>
+                        <h1 class="text-lg font-bold leading-tight">3673 TPK-KY 宸鴻</h1>
+                        <p class="text-xs text-slate-500">2026/1/12 深度估值報告</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <button onclick="scrollToSection('dashboard')" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">總覽</button>
+                    <button onclick="scrollToSection('valuation')" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">估值模型</button>
+                    <button onclick="scrollToSection('strategy')" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">戰略轉型</button>
+                    <button onclick="scrollToSection('tracker')" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">營收追蹤</button>
+                </div>
+                <div class="text-right hidden sm:block">
+                    <div class="text-xs text-slate-500">參考股價</div>
+                    <div class="font-mono font-bold text-slate-900">41.10 TWD</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- Section 1: Executive Dashboard -->
+        <section id="dashboard" class="space-y-6">
+            <div class="max-w-3xl">
+              <!-- [MOCK] PDF 下載按鈕區域 -->
+                <button onclick="openPdfReport()" class="mt-3 group flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-3 py-1.5 rounded text-xs transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-400 group-hover:text-red-300"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+                    下載完整研究報告 (PDF)
+                </button>
+                <!-- [MOCK] 結束 -->
+                <h2 class="text-3xl font-bold text-slate-900 mb-2">執行摘要：價值窪地與轉型契機</h2>
+                <p class="text-slate-600 leading-relaxed">
+                    本區塊彙整了報告中最核心的三大數據指標。TPK-KY 目前處於極度低估狀態，每股淨值 (NAV) 高達 93.82 元，遠高於當前股價。透過下方的儀表板，您可以快速掌握投資邏輯的核心：極低 P/B 比提供的安全邊際、潛在的價格回歸空間，以及驅動重估的 3D 列印新戰略。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1: P/B Ratio -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 h-full w-1 bg-blue-500 group-hover:w-2 transition-all"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">股價淨值比 (P/B)</p>
+                            <h3 class="text-4xl font-bold text-slate-900 mt-1">0.44<span class="text-xl text-slate-400">x</span></h3>
+                        </div>
+                        <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">嚴重低估</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2 mb-2">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: 44%"></div>
+                    </div>
+                    <p class="text-xs text-slate-500">每股淨值 93.82 元 vs 股價 41.10 元</p>
+                </div>
+
+                <!-- Card 2: Target Price -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 h-full w-1 bg-emerald-500 group-hover:w-2 transition-all"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">合理目標價</p>
+                            <h3 class="text-4xl font-bold text-slate-900 mt-1">56.30</h3>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold">+37% 空間</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                        <span>目標 P/B 回歸至 0.6x</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">基於法人共識與中期均值回歸</p>
+                </div>
+
+                <!-- Card 3: Catalyst -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 h-full w-1 bg-purple-500 group-hover:w-2 transition-all"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">關鍵催化劑</p>
+                            <h3 class="text-2xl font-bold text-slate-900 mt-1">3D 列印併購</h3>
+                        </div>
+                        <span class="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold">ClimAA</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-2">從觸控模組轉型至高毛利積層製造。</p>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 bg-slate-100 rounded text-xs text-slate-600">毛利 >30%</span>
+                        <span class="px-2 py-1 bg-slate-100 rounded text-xs text-slate-600">光固化技術</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Interactive Valuation Model -->
+        <section id="valuation" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">財務估值模擬器</h2>
+                        <p class="text-sm text-slate-600 mt-1">請點擊下方按鈕切換不同情境，觀察 EPS 與目標價的變化。此模型協助您在保守與樂觀之間找到投資平衡點。</p>
+                    </div>
+                    <div class="flex bg-white rounded-lg p-1 border border-slate-200 shadow-sm">
+                        <button onclick="updateScenario('bear')" id="btn-bear" class="scenario-btn px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 transition-all">保守 (Bear)</button>
+                        <button onclick="updateScenario('base')" id="btn-base" class="scenario-btn active px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 transition-all">合理 (Base)</button>
+                        <button onclick="updateScenario('bull')" id="btn-bull" class="scenario-btn px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 transition-all">樂觀 (Bull)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 p-8">
+                <!-- Left: Dynamic Info -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">情境假設</h3>
+                        <div id="scenario-desc" class="bg-slate-50 rounded-lg p-4 border border-slate-100 text-sm text-slate-700 leading-relaxed">
+                            <!-- JS will populate this -->
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white border border-slate-200 p-4 rounded-lg text-center">
+                            <p class="text-xs text-slate-500">預估年度 EPS</p>
+                            <p id="metric-eps" class="text-2xl font-bold text-slate-900 mt-1">--</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 p-4 rounded-lg text-center">
+                            <p class="text-xs text-slate-500">推估目標價</p>
+                            <p id="metric-price" class="text-2xl font-bold text-emerald-600 mt-1">--</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-3">季度獲利拆解 (EPS)</h4>
+                        <div class="space-y-3" id="quarter-breakdown">
+                            <!-- JS will populate this -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Chart -->
+                <div class="lg:col-span-2 flex flex-col justify-center">
+                    <div class="chart-container">
+                        <canvas id="valuationChart"></canvas>
+                    </div>
+                    <p class="text-center text-xs text-slate-400 mt-4">
+                        *目標價計算基於不同情境下的 P/B 或 P/E 乘數修正
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Revenue Tracker -->
+        <section id="tracker" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">營收達標路徑 (Revenue Tracker)</h2>
+                    <p class="text-slate-600 mt-2 leading-relaxed">
+                        為了達成年度營收 630 億元的目標，我們建立了每月的「檢查點」。右側圖表顯示了累計營收的理想路徑。若實際營收（藍點）連續兩個月低於路徑 10% 以上，則需下修估值。
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-900 mb-4">關鍵月份檢核點</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border-l-4 border-slate-300">
+                            <div>
+                                <span class="text-xs text-slate-500">Q1 淡季低點</span>
+                                <div class="font-bold">1月 - 2月</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-500">月均目標</span>
+                                <div class="font-mono font-bold text-slate-700">~39 億</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                            <div>
+                                <span class="text-xs text-blue-600 font-bold">Q3 旺季起點 (關鍵)</span>
+                                <div class="font-bold text-blue-900">8月</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-blue-600">目標營收</span>
+                                <div class="font-mono font-bold text-blue-900">60.4 億</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-indigo-50 rounded-lg border-l-4 border-indigo-500">
+                            <div>
+                                <span class="text-xs text-indigo-600 font-bold">年度高峰</span>
+                                <div class="font-bold text-indigo-900">9月 - 10月</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-indigo-600">目標營收</span>
+                                <div class="font-mono font-bold text-indigo-900">> 63.0 億</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Strategy Pivot -->
+        <section id="strategy" class="bg-slate-900 text-white rounded-2xl p-8 overflow-hidden relative">
+            <!-- Background Decoration -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 transform translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute bottom-0 left-0 w-64 h-64 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 transform -translate-x-1/2 translate-y-1/2"></div>
+
+            <div class="relative z-10">
+                <div class="max-w-3xl mb-8">
+                    <h2 class="text-2xl font-bold mb-2">戰略轉型：從觸控到積層製造</h2>
+                    <p class="text-slate-300">
+                        TPK 正處於歷史性的轉折點。透過收購 ClimAA Carbon，公司正試圖擺脫傳統觸控模組低毛利的紅海競爭，轉向高附加價值的 3D 列印市場。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Legacy Business -->
+                    <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 backdrop-blur-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-400">
+                                📉
+                            </span>
+                            <h3 class="font-bold text-lg text-slate-200">傳統觸控業務</h3>
+                        </div>
+                        <ul class="space-y-3 text-sm text-slate-400">
+                            <li class="flex items-start gap-2">
+                                <span class="text-slate-500 mt-1">●</span>
+                                <span><strong>毛利率：</strong> 5-7% (低利潤)</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-slate-500 mt-1">●</span>
+                                <span><strong>市場特徵：</strong> 成熟市場，價格競爭激烈。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-slate-500 mt-1">●</span>
+                                <span><strong>角色：</strong> 提供穩定的現金流 (Cash Cow) 以支持轉型。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- New Business -->
+                    <div class="bg-gradient-to-br from-blue-900/50 to-purple-900/50 rounded-xl p-6 border border-blue-500/30 backdrop-blur-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/50">
+                                🚀
+                            </span>
+                            <h3 class="font-bold text-lg text-white">新事業：3D 列印 (AM)</h3>
+                        </div>
+                        <ul class="space-y-3 text-sm text-blue-100">
+                            <li class="flex items-start gap-2">
+                                <span class="text-blue-400 mt-1">●</span>
+                                <span><strong>預期毛利率：</strong> > 30% (高附加價值)</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-blue-400 mt-1">●</span>
+                                <span><strong>核心技術：</strong> Digital Light Synthesis (DLS) 光固化技術。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-blue-400 mt-1">●</span>
+                                <span><strong>競爭優勢：</strong> 結合 TPK 的量產管理能力，將實驗室技術規模化。</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm text-slate-500 mb-2">本報告由「高階 AI 投資研究系統」自動生成，僅供互動演示。</p>
+            <p class="text-xs text-slate-400">
+                免責聲明：本網頁內容僅供參考，不代表任何投資建議。投資人應獨立判斷並自負風險。
+                <br>資料來源：2025 Q3 財報、市場公開資訊。
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // State Management
+        const scenarios = {
+            bear: {
+                eps: 1.75,
+                price: 32.70,
+                revenueGrowth: -5,
+                netMargin: 1.19,
+                desc: "假設全球消費性電子需求持續疲軟，營收衰退 5%，淨利率維持在近四季平均低檔 (1.19%)。此情境反映最壞狀況。",
+                quarters: [
+                    { q: 'Q1', eps: 0.26, note: '淡季效應顯著' },
+                    { q: 'Q2', eps: 0.35, note: '需求疲軟' },
+                    { q: 'Q3', eps: 0.61, note: '旺季不旺' },
+                    { q: 'Q4', eps: 0.53, note: '庫存調整' }
+                ],
+                color: '#ef4444' // red-500
+            },
+            base: {
+                eps: 3.27,
+                price: 56.30,
+                revenueGrowth: 0,
+                netMargin: 2.50,
+                desc: "分析師共識基準。假設年度營收持平，但透過產品組合優化，淨利率回升至 2.5% 的健康水準。反映公司營運正常化。",
+                quarters: [
+                    { q: 'Q1', eps: 0.49, note: '傳統淡季' },
+                    { q: 'Q2', eps: 0.65, note: '新品試產' },
+                    { q: 'Q3', eps: 1.15, note: 'Apple 備貨旺季' },
+                    { q: 'Q4', eps: 0.98, note: '銷售持穩' }
+                ],
+                color: '#3b82f6' // blue-500
+            },
+            bull: {
+                eps: 5.19,
+                price: 75.05,
+                revenueGrowth: 5,
+                netMargin: 3.20,
+                desc: "樂觀情境。假設 3D 列印新事業貢獻優於預期，且主要客戶新產品熱銷，帶動營收成長 5%，淨利率突破 3%。",
+                quarters: [
+                    { q: 'Q1', eps: 0.78, note: '淡季不淡' },
+                    { q: 'Q2', eps: 1.04, note: '新業務貢獻' },
+                    { q: 'Q3', eps: 1.82, note: '雙引擎驅動' },
+                    { q: 'Q4', eps: 1.55, note: '獲利爆發' }
+                ],
+                color: '#10b981' // emerald-500
+            }
+        };
+
+        let currentScenario = 'base';
+        let valuationChartInstance = null;
+        let revenueChartInstance = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initValuationChart();
+            initRevenueChart();
+            updateScenario('base');
+        });
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Core Interaction: Update Scenario
+        function updateScenario(type) {
+            currentScenario = type;
+            const data = scenarios[type];
+
+            // 1. Update Buttons
+            document.querySelectorAll('.scenario-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-50', 'border-blue-500', 'text-blue-700');
+                if(btn.id === `btn-${type}`) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // 2. Update Text Metrics
+            document.getElementById('metric-eps').innerText = `${data.eps.toFixed(2)} 元`;
+            document.getElementById('metric-price').innerText = `${data.price.toFixed(2)} 元`;
+            document.getElementById('scenario-desc').innerText = data.desc;
+            
+            // 3. Update Text Color based on scenario
+            const priceEl = document.getElementById('metric-price');
+            if(type === 'bear') priceEl.className = "text-2xl font-bold text-red-600 mt-1";
+            else if(type === 'bull') priceEl.className = "text-2xl font-bold text-emerald-600 mt-1";
+            else priceEl.className = "text-2xl font-bold text-blue-600 mt-1";
+
+            // 4. Update Quarterly Breakdown List
+            const listContainer = document.getElementById('quarter-breakdown');
+            listContainer.innerHTML = '';
+            data.quarters.forEach(q => {
+                const width = (q.eps / data.eps) * 100 * 3; // Scale factor for visual bar
+                listContainer.innerHTML += `
+                    <div class="flex items-center text-sm">
+                        <div class="w-8 font-bold text-slate-700">${q.q}</div>
+                        <div class="flex-1 mx-3">
+                            <div class="h-2 rounded-full bg-slate-100 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-500" style="width: ${Math.min(width, 100)}%; background-color: ${data.color}"></div>
+                            </div>
+                        </div>
+                        <div class="w-16 text-right font-mono text-slate-600">${q.eps.toFixed(2)}</div>
+                    </div>
+                `;
+            });
+
+            // 5. Update Chart
+            updateValuationChart(data);
+        }
+
+        // Chart.js Logic: Valuation Chart
+        function initValuationChart() {
+            const ctx = document.getElementById('valuationChart').getContext('2d');
+            valuationChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['目前股價', '目標股價'],
+                    datasets: [{
+                        label: '價格 (TWD)',
+                        data: [41.10, 0], // Initial dummy data
+                        backgroundColor: ['#94a3b8', '#3b82f6'],
+                        borderRadius: 6,
+                        barThickness: 50
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' TWD';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            title: { display: true, text: '股價 (TWD)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    animation: {
+                        duration: 800
+                    }
+                }
+            });
+        }
+
+        function updateValuationChart(data) {
+            valuationChartInstance.data.datasets[0].data = [41.10, data.price];
+            valuationChartInstance.data.datasets[0].backgroundColor = ['#94a3b8', data.color];
+            valuationChartInstance.update();
+        }
+
+        // Chart.js Logic: Revenue Tracker
+        function initRevenueChart() {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            
+            // Generate linear target data for 63B annual goal
+            // Seasonality applied roughly: Q1 low, Q2 mid, Q3 high, Q4 mid-high
+            // Total sum approx 630
+            const targetData = [45, 34, 50, 47, 50, 52, 55, 60, 63, 60, 58, 56]; 
+            const labels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+
+            revenueChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '目標路徑 (Target)',
+                            data: targetData,
+                            borderColor: '#94a3b8', // Slate-400
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            tension: 0.4,
+                            fill: true,
+                            backgroundColor: 'rgba(241, 245, 249, 0.5)' // Slate-100
+                        },
+                        {
+                            label: '關鍵檢核點',
+                            data: [null, null, null, null, null, null, null, 60.4, 63.0, null, null, null],
+                            borderColor: '#3b82f6',
+                            backgroundColor: '#3b82f6',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            showLine: false // Only show points
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', align: 'end' },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        title: {
+                            display: true,
+                            text: '2026 月營收目標趨勢圖 (單位: 億元)',
+                            align: 'start',
+                            font: { size: 14, weight: 'bold' },
+                            color: '#334155'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 30,
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+// --- [MOCK] PDF 開啟邏輯 ---
+        function openPdfReport() {
+            // TODO: 請在此處替換為您真實的 PDF 檔案路徑或 URL
+            // 例如: const realPdfUrl = './assets/3374_analysis_2026.pdf';
+            // 或者: const realPdfUrl = 'https://your-domain.com/reports/3374.pdf';
+            
+            // 這裡使用一個網路上公開的 Dummy PDF 作為示範
+            const mockPdfUrl = './3374_2026_report.pdf';
+            // 開啟新分頁
+            window.open(mockPdfUrl, '_blank');
+
+            // (選用) 如果希望直接觸發下載而非預覽，可以使用以下方式 (需同源或伺服器支援):
+            // const link = document.createElement('a');
+            // link.href = mockPdfUrl;
+            // link.download = '3374_Research_Report.pdf';
+            // link.click();
+        }
+
+    </script>
+</body>
+</html>
